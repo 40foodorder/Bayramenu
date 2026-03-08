@@ -5,7 +5,6 @@ build/
 bin/
 gen/
 local.properties
-gradle.properties
 .idea/
 *.iml
 *.DS_Store
