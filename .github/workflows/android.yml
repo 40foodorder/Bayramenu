@@ -1,53 +1,93 @@
 name: Android CI
-
 on:
   push:
     branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
-    
     - name: set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-
     - name: Create Google Services JSON
       run: |
         cat <<EOR > customer/google-services.json
-        {
-          "project_info": {
-            "project_number": "750935810453",
-            "project_id": "bayra-food-order",
-            "storage_bucket": "bayra-food-order.firebasestorage.app"
-          },
-          "client": [
-            {
-              "client_info": {
-                "mobilesdk_app_id": "1:750935810453:android:48abc17ffc6c166a2c169c",
-                "android_client_info": { "package_name": "com.bayramenu.app" }
-              },
-              "api_key": [ { "current_key": "AIzaSyAaQ9Ch2J_79AdXlLfftINW_PC8aH9eAhg" } ],
-              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
-            }
-          ],
-          "configuration_version": "1"
+[{
+  "project_info": {
+    "project_number": "279171849396",
+    "project_id": "bayraeats",
+    "storage_bucket": "bayraeats.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279171849396:android:610722afc851c168a68be1",
+        "android_client_info": {
+          "package_name": "com.bayramenu.app"
         }
-        EOR
-
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZTw5z-o-15z-d2yiuBAYo2NU3xPLsXa4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279171849396:android:e57b1b37731b5aafa68be1",
+        "android_client_info": {
+          "package_name": "com.bayramenu.driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZTw5z-o-15z-d2yiuBAYo2NU3xPLsXa4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:279171849396:android:bd12d74947527577a68be1",
+        "android_client_info": {
+          "package_name": "com.bayramenu.partner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZTw5z-o-15z-d2yiuBAYo2NU3xPLsXa4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}]
+EOR
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-
     - name: Build with Gradle
       run: ./gradlew :customer:assembleDebug
-
-    # THIS IS THE MISSING STEP
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
