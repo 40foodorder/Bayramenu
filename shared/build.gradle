@@ -16,6 +16,7 @@ android {
         minSdk 24
     }
 
+    // THIS IS THE FIX: Tell Kotlin to look in the java folder
     sourceSets {
         main.java.srcDirs += 'src/main/java'
     }
