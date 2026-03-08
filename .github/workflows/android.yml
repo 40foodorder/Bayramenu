@@ -3,8 +3,6 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -19,6 +17,29 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
+
+    - name: Create Google Services JSON
+      run: |
+        cat <<EOR > customer/google-services.json
+        {
+          "project_info": {
+            "project_number": "750935810453",
+            "project_id": "bayra-food-order",
+            "storage_bucket": "bayra-food-order.firebasestorage.app"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:750935810453:android:48abc17ffc6c166a2c169c",
+                "android_client_info": { "package_name": "com.bayramenu.app" }
+              },
+              "api_key": [ { "current_key": "AIzaSyAaQ9Ch2J_79AdXlLfftINW_PC8aH9eAhg" } ],
+              "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        EOR
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
