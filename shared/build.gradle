@@ -15,14 +15,6 @@ android {
     defaultConfig {
         minSdk 24
     }
-
-    // This ensures both Java and Kotlin compilers see the same files
-    sourceSets {
-        main {
-            java.srcDirs = ['src/main/java']
-            kotlin.srcDirs = ['src/main/java']
-        }
-    }
 }
 
 dependencies {
