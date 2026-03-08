@@ -16,11 +16,11 @@ android {
         minSdk 24
     }
 
-    // MANDATORY FOR MONOREPO: Link the source directories
+    // This ensures both Java and Kotlin compilers see the same files
     sourceSets {
         main {
-            java.srcDirs += 'src/main/java'
-            kotlin.srcDirs += 'src/main/java'
+            java.srcDirs = ['src/main/java']
+            kotlin.srcDirs = ['src/main/java']
         }
     }
 }

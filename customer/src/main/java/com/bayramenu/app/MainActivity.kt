@@ -1,6 +1,7 @@
 package com.bayramenu.app
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -30,7 +31,8 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                repository.getRestaurantsStream().collect { restaurants ->
+                // We added the explicit type : List<Restaurant> here
+                repository.getRestaurantsStream().collect { restaurants: List<Restaurant> ->
                     progressBar.visibility = View.GONE
                     if (restaurants.isEmpty()) {
                         Toast.makeText(this@MainActivity, "No restaurants found!", Toast.LENGTH_SHORT).show()
@@ -41,6 +43,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 progressBar.visibility = View.GONE
                 Log.e("Bayramenu", "Error fetching data", e)
+                Toast.makeText(this@MainActivity, "Error: \${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
