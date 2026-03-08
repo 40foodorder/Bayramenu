@@ -12,3 +12,5 @@ gradle.properties
 google-services.json
 *.jks
 *.keystore
+gradle-7.5-bin.zip
+gradle-7.5/

@@ -1,9 +1,2 @@
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
 rootProject.name = 'food-ordering-monorepo'
 include ':shared', ':customer', ':partner', ':driver'
