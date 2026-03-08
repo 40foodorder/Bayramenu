@@ -9,11 +9,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bayramenu.shared.repository.FirebaseRestaurantRepository
+import com.bayramenu.shared.model.Restaurant
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     
-    // Dependencies
     private val repository = FirebaseRestaurantRepository()
     private val adapter = RestaurantAdapter()
 
@@ -21,19 +22,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Setup UI
         val rvRestaurants = findViewById<RecyclerView>(R.id.rvRestaurants)
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
         
         rvRestaurants.layoutManager = LinearLayoutManager(this)
         rvRestaurants.adapter = adapter
 
-        // Load Data
         lifecycleScope.launch {
             try {
                 repository.getRestaurantsStream().collect { restaurants ->
                     progressBar.visibility = View.GONE
-                    
                     if (restaurants.isEmpty()) {
                         Toast.makeText(this@MainActivity, "No restaurants found!", Toast.LENGTH_SHORT).show()
                     } else {
@@ -42,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 progressBar.visibility = View.GONE
-                Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                Log.e("Bayramenu", "Error fetching data", e)
             }
         }
     }

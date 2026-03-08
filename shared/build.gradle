@@ -16,9 +16,12 @@ android {
         minSdk 24
     }
 
-    // THIS IS THE FIX: Tell Kotlin to look in the java folder
+    // MANDATORY FOR MONOREPO: Link the source directories
     sourceSets {
-        main.java.srcDirs += 'src/main/java'
+        main {
+            java.srcDirs += 'src/main/java'
+            kotlin.srcDirs += 'src/main/java'
+        }
     }
 }
 
