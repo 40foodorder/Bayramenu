@@ -46,3 +46,10 @@ jobs:
 
     - name: Build with Gradle
       run: ./gradlew :customer:assembleDebug
+
+    # THIS IS THE MISSING STEP
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Bayramenu-Customer-App
+        path: customer/build/outputs/apk/debug/customer-debug.apk
