@@ -1,2 +1,2 @@
 rootProject.name = 'food-ordering-monorepo'
-include ':shared', ':customer', ':partner', ':driver'
+include ":partner", ':shared', ':customer', ':partner', ':driver'

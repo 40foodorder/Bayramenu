@@ -11,14 +11,17 @@ repositories {
 android {
     namespace 'com.bayramenu.shared'
     compileSdk 33
-
-    defaultConfig {
-        minSdk 24
+    defaultConfig { minSdk 24 }
+    
+    sourceSets {
+        main {
+            kotlin.srcDirs = ['src/main/kotlin']
+        }
     }
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:32.2.0')
-    implementation 'com.google.firebase:firebase-firestore-ktx'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4'
+    api platform('com.google.firebase:firebase-bom:32.2.0')
+    api 'com.google.firebase:firebase-firestore-ktx'
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4'
 }
