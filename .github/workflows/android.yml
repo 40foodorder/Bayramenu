@@ -17,16 +17,17 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Create Google Services JSON
+    - name: Create Google Services JSONs
       env:
         GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON }}
-      run: echo "$GOOGLE_SERVICES" > customer/google-services.json
+      run: |
+        echo "$GOOGLE_SERVICES" > customer/google-services.json
+        echo "$GOOGLE_SERVICES" > partner/google-services.json
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build with Gradle
-      # We remove the AAPT2 override here because GitHub's environment is standard
       run: ./gradlew :customer:assembleDebug :partner:assembleDebug
 
     - name: Upload APKs
