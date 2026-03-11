@@ -18,5 +18,6 @@
         </activity>
         
         <activity android:name=".MenuActivity" />
+        <activity android:name=".CheckoutActivity" />
     </application>
 </manifest>

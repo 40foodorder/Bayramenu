@@ -42,7 +42,9 @@ class MenuActivity : AppCompatActivity() {
 
         btnCheckout.setOnClickListener {
             Toast.makeText(this, "Proceeding to checkout...", Toast.LENGTH_SHORT).show()
-            // Phase 8 will go here
+            val intent = android.content.Intent(this, CheckoutActivity::class.java)
+            intent.putExtra("RESTAURANT_ID", restaurantId)
+            startActivity(intent)
         }
     }
 }
