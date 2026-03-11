@@ -8,6 +8,8 @@ data class Order(
     val restaurantId: String = "",
     val items: List<OrderItem> = emptyList(),
     val totalAmount: Double = 0.0,
+    val deliveryFee: Double = 0.0,
+    val chapaTransactionId: String = "",
     val status: OrderStatus = OrderStatus.PENDING,
     val timestamp: Long = System.currentTimeMillis()
 )
