@@ -17,8 +17,10 @@ import org.osmdroid.views.overlay.Marker
 
 class DriverActivity : AppCompatActivity() {
     private val orderRepository = OrderRepository()
-    private lateinit var map: MapView
-    private lateinit var btnNavigate: FloatingActionButton
+    
+    // Explicitly declaring these as class properties
+    private var map: MapView? = null
+    private var btnNavigate: FloatingActionButton? = null
     private var activeOrder: Order? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,48 +28,48 @@ class DriverActivity : AppCompatActivity() {
         Configuration.getInstance().userAgentValue = MapConstants.USER_AGENT
         setContentView(R.layout.activity_driver)
         
+        map = findViewById(R.id.map)
         btnNavigate = findViewById(R.id.btnNavigate)
+        
         initMap()
 
         orderRepository.listenForAvailableDeliveries { orders ->
             drawRadarPins(orders)
         }
 
-        btnNavigate.setOnClickListener {
+        btnNavigate?.setOnClickListener {
             activeOrder?.let { order ->
-                // Dynamic Targeting: Restaurant (Pickup) vs Customer (Destination)
                 val targetLat = if (order.status == OrderStatus.ACCEPTED) order.restaurantLat else order.customerLat
                 val targetLng = if (order.status == OrderStatus.ACCEPTED) order.restaurantLng else order.customerLng
-                
                 NavigationEngine.launchNavigation(this, targetLat, targetLng)
             }
         }
     }
 
     private fun initMap() {
-        map = findViewById(R.id.map)
-        map.setMultiTouchControls(true)
-        map.controller.setZoom(15.0)
-        map.controller.setCenter(GeoPoint(6.0206, 37.5534))
+        map?.setMultiTouchControls(true)
+        map?.controller?.setZoom(15.0)
+        map?.controller?.setCenter(GeoPoint(6.0206, 37.5534))
     }
 
     private fun drawRadarPins(orders: List<Order>) {
-        map.overlays.clear()
+        map?.overlays?.clear()
         orders.forEach { order ->
-            val marker = Marker(map)
+            val m = map ?: return@forEach
+            val marker = Marker(m)
             marker.position = GeoPoint(order.restaurantLat, order.restaurantLng)
-            marker.title = "Restaurant Pickup"
+            marker.title = "Pickup available"
             marker.setOnMarkerClickListener { _, _ ->
                 activeOrder = order
-                btnNavigate.visibility = View.VISIBLE
-                Toast.makeText(this, "Target Locked: Order ${order.orderId}", Toast.LENGTH_SHORT).show()
+                btnNavigate?.visibility = View.VISIBLE
+                Toast.makeText(this, "Order Selected", Toast.LENGTH_SHORT).show()
                 true
             }
-            map.overlays.add(marker)
+            map?.overlays?.add(marker)
         }
-        map.invalidate()
+        map?.invalidate()
     }
 
-    override fun onResume() { super.onResume(); map.onResume() }
-    override fun onPause() { super.onPause(); map.onPause() }
+    override fun onResume() { super.onResume(); map?.onResume() }
+    override fun onPause() { super.onPause(); map?.onPause() }
 }
