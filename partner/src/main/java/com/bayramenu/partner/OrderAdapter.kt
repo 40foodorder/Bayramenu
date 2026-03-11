@@ -7,16 +7,31 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bayramenu.shared.model.Order
 
-class OrderAdapter : RecyclerView.Adapter<OrderAdapter.OrderViewHolder>() {
+class OrderAdapter(private val onAccept: (Order) -> Unit = {}) : RecyclerView.Adapter<OrderAdapter.OrderViewHolder>() {
     private val orders = mutableListOf<Order>()
-    fun updateOrders(newOrders: List<Order>) { orders.clear(); orders.addAll(newOrders); notifyDataSetChanged() }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = OrderViewHolder(LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_2, parent, false))
-    override fun onBindViewHolder(holder: OrderViewHolder, position: Int) = holder.bind(orders[position])
+
+    fun updateOrders(newOrders: List<Order>) {
+        orders.clear()
+        orders.addAll(newOrders)
+        notifyDataSetChanged()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = OrderViewHolder(
+        LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_2, parent, false)
+    )
+
+    override fun onBindViewHolder(holder: OrderViewHolder, position: Int) {
+        val order = orders[position]
+        holder.bind(order)
+        holder.itemView.setOnClickListener { onAccept(order) }
+    }
+
     override fun getItemCount() = orders.size
-    class OrderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+    class OrderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(order: Order) {
-            view.findViewById<TextView>(android.R.id.text1).text = "Order ID: ${order.orderId}"
-            view.findViewById<TextView>(android.R.id.text2).text = "Total: ${order.totalAmount} ETB"
+            itemView.findViewById<TextView>(android.R.id.text1).text = "Order: ${order.orderId}"
+            itemView.findViewById<TextView>(android.R.id.text2).text = "Status: ${order.status}"
         }
     }
 }
