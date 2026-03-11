@@ -22,6 +22,16 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
             }
     }
 
+    // NEW: For Drivers to see orders ready for pickup
+    fun listenForAvailableDeliveries(onOrdersReceived: (List<Order>) -> Unit) {
+        firestore.collection("orders")
+            .whereEqualTo("status", OrderStatus.ACCEPTED.name) // Or "PREPARING"
+            .addSnapshotListener { snapshot, _ ->
+                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
+                onOrdersReceived(orders)
+            }
+    }
+
     suspend fun updateOrderStatus(orderId: String, newStatus: OrderStatus) {
         firestore.collection("orders").document(orderId).update("status", newStatus.name).await()
     }

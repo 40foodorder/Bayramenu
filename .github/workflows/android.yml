@@ -28,7 +28,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build with Gradle
-      run: ./gradlew :customer:assembleDebug :partner:assembleDebug
+      run: ./gradlew :customer:assembleDebug :partner:assembleDebug :driver:assembleDebug
 
     - name: Upload APKs
       uses: actions/upload-artifact@v4
@@ -37,3 +37,4 @@ jobs:
         path: |
           customer/build/outputs/apk/debug/customer-debug.apk
           partner/build/outputs/apk/debug/partner-debug.apk
+          driver/build/outputs/apk/debug/driver-debug.apk
