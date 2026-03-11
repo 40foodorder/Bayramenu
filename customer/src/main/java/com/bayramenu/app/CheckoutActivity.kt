@@ -57,7 +57,7 @@ class CheckoutActivity : AppCompatActivity() {
         }
 
         val order = Order(
-            customerId = "user_demo_1", // MVP hardcoded user
+            customerId = com.bayramenu.shared.repository.UserRepository().getCurrentUserId() ?: "unknown", // MVP hardcoded user
             restaurantId = restaurantId,
             items = cartItems,
             totalAmount = total,
