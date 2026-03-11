@@ -1,35 +1,47 @@
 package com.bayramenu.app
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
+import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.bayramenu.shared.model.Order
-import com.bayramenu.shared.repository.OrderRepository
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.bayramenu.shared.repository.FirebaseRestaurantRepository
+import com.bayramenu.shared.model.Restaurant
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private val orderRepository = OrderRepository()
+    private val repository = FirebaseRestaurantRepository()
+    private lateinit var adapter: RestaurantAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        findViewById<Button>(R.id.btnOrder).setOnClickListener {
-            val testOrder = Order(
-                customerId = "user_123",
-                restaurantId = "RESTAURANT_ID_123",
-                totalAmount = 150.0
-            )
-            
-            lifecycleScope.launch {
-                try {
-                    val orderId = orderRepository.placeOrder(testOrder)
-                    Toast.makeText(this@MainActivity, "Order placed: $orderId", Toast.LENGTH_LONG).show()
-                } catch (e: Exception) {
-                    Toast.makeText(this@MainActivity, "Failed: ${e.message}", Toast.LENGTH_LONG).show()
+        val rvRestaurants = findViewById<RecyclerView>(R.id.rvRestaurants)
+        val progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        
+        adapter = RestaurantAdapter { restaurant ->
+            val intent = Intent(this, MenuActivity::class.java)
+            intent.putExtra("RESTAURANT_ID", restaurant.id)
+            startActivity(intent)
+        }
+
+        rvRestaurants.layoutManager = LinearLayoutManager(this)
+        rvRestaurants.adapter = adapter
+
+        lifecycleScope.launch {
+            try {
+                repository.getRestaurantsStream().collect { restaurants: List<Restaurant> ->
+                    progressBar.visibility = View.GONE
+                    if (restaurants.isEmpty()) Toast.makeText(this@MainActivity, "No restaurants found!", Toast.LENGTH_SHORT).show()
+                    else adapter.submitList(restaurants)
                 }
+            } catch (e: Exception) {
+                progressBar.visibility = View.GONE
             }
         }
     }

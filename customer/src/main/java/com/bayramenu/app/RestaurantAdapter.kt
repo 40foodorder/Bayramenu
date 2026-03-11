@@ -8,21 +8,23 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bayramenu.shared.model.Restaurant
 
-class RestaurantAdapter : RecyclerView.Adapter<RestaurantAdapter.RestaurantViewHolder>() {
+class RestaurantAdapter(private val onClick: (Restaurant) -> Unit) : RecyclerView.Adapter<RestaurantAdapter.RestaurantViewHolder>() {
     private val items = mutableListOf<Restaurant>()
     fun submitList(newItems: List<Restaurant>) { items.clear(); items.addAll(newItems); notifyDataSetChanged() }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = RestaurantViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_restaurant, parent, false))
-    override fun onBindViewHolder(holder: RestaurantViewHolder, position: Int) = holder.bind(items[position])
+    override fun onBindViewHolder(holder: RestaurantViewHolder, position: Int) {
+        val rest = items[position]
+        holder.bind(rest)
+        holder.itemView.setOnClickListener { onClick(rest) }
+    }
     override fun getItemCount() = items.size
     class RestaurantViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val tvName: TextView = itemView.findViewById(R.id.tvName)
-        private val tvAddress: TextView = itemView.findViewById(R.id.tvAddress)
-        private val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
         fun bind(restaurant: Restaurant) {
-            tvName.text = restaurant.name
-            tvAddress.text = restaurant.address
-            tvStatus.text = if (restaurant.isOpen) "● Open" else "● Closed"
-            tvStatus.setTextColor(if (restaurant.isOpen) Color.parseColor("#4CAF50") else Color.parseColor("#F44336"))
+            itemView.findViewById<TextView>(R.id.tvName).text = restaurant.name
+            itemView.findViewById<TextView>(R.id.tvAddress).text = restaurant.address
+            val statusView = itemView.findViewById<TextView>(R.id.tvStatus)
+            statusView.text = if (restaurant.isOpen) "● Open" else "● Closed"
+            statusView.setTextColor(if (restaurant.isOpen) Color.parseColor("#4CAF50") else Color.parseColor("#F44336"))
         }
     }
 }
