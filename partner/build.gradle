@@ -3,7 +3,6 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'com.google.gms.google-services'
 }
-
 android {
     namespace 'com.bayramenu.partner'
     compileSdk 33
@@ -13,11 +12,11 @@ android {
         targetSdk 33
     }
 }
-
 dependencies {
     implementation project(':shared')
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation platform('com.google.firebase:firebase-bom:32.2.0')
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4'

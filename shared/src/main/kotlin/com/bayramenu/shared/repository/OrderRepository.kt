@@ -1,6 +1,7 @@
 package com.bayramenu.shared.repository
 
 import com.bayramenu.shared.model.Order
+import com.bayramenu.shared.model.OrderStatus
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -12,13 +13,16 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
         return doc.id
     }
 
-    fun listenForOrders(restaurantId: String, onOrderReceived: (Order) -> Unit) {
+    fun listenForOrders(restaurantId: String, onOrdersReceived: (List<Order>) -> Unit) {
         firestore.collection("orders")
             .whereEqualTo("restaurantId", restaurantId)
             .addSnapshotListener { snapshot, _ ->
-                snapshot?.documents?.forEach { doc ->
-                    doc.toObject(Order::class.java)?.let { onOrderReceived(it) }
-                }
+                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
+                onOrdersReceived(orders)
             }
+    }
+
+    suspend fun updateOrderStatus(orderId: String, newStatus: OrderStatus) {
+        firestore.collection("orders").document(orderId).update("status", newStatus.name).await()
     }
 }
