@@ -1,47 +1,73 @@
 package com.bayramenu.driver
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.bayramenu.shared.repository.OrderRepository
+import com.bayramenu.shared.map.MapConstants
 import com.bayramenu.shared.model.Order
 import com.bayramenu.shared.model.OrderStatus
-import kotlinx.coroutines.launch
+import com.bayramenu.shared.repository.OrderRepository
+import com.bayramenu.shared.util.NavigationEngine
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import org.osmdroid.config.Configuration
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 class DriverActivity : AppCompatActivity() {
     private val orderRepository = OrderRepository()
-    // Reusing the partner adapter style for speed in MVP
-    private lateinit var adapter: DeliveryAdapter
+    private lateinit var map: MapView
+    private lateinit var btnNavigate: FloatingActionButton
+    private var activeOrder: Order? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Configuration.getInstance().userAgentValue = MapConstants.USER_AGENT
         setContentView(R.layout.activity_driver)
+        
+        btnNavigate = findViewById(R.id.btnNavigate)
+        initMap()
 
-        adapter = DeliveryAdapter { order -> acceptDelivery(order) }
-
-        val rv = findViewById<RecyclerView>(R.id.rvDeliveries)
-        rv.layoutManager = LinearLayoutManager(this)
-        rv.adapter = adapter
-
-        // Listen for all orders waiting for a driver
-        orderRepository.listenForAvailableDeliveries { orders -> 
-            adapter.updateOrders(orders) 
+        orderRepository.listenForAvailableDeliveries { orders ->
+            drawRadarPins(orders)
         }
-    }
 
-    private fun acceptDelivery(order: Order) {
-        lifecycleScope.launch {
-            try {
-                // In Phase 11, we will attach the driverId here too
-                orderRepository.updateOrderStatus(order.orderId, OrderStatus.OUT_FOR_DELIVERY)
-                Toast.makeText(this@DriverActivity, "Delivery Accepted! Open Maps.", Toast.LENGTH_SHORT).show()
-                // Navigation Intent will go here
-            } catch (e: Exception) {
-                Toast.makeText(this@DriverActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+        btnNavigate.setOnClickListener {
+            activeOrder?.let { order ->
+                // Dynamic Targeting: Restaurant (Pickup) vs Customer (Destination)
+                val targetLat = if (order.status == OrderStatus.ACCEPTED) order.restaurantLat else order.customerLat
+                val targetLng = if (order.status == OrderStatus.ACCEPTED) order.restaurantLng else order.customerLng
+                
+                NavigationEngine.launchNavigation(this, targetLat, targetLng)
             }
         }
     }
+
+    private fun initMap() {
+        map = findViewById(R.id.map)
+        map.setMultiTouchControls(true)
+        map.controller.setZoom(15.0)
+        map.controller.setCenter(GeoPoint(6.0206, 37.5534))
+    }
+
+    private fun drawRadarPins(orders: List<Order>) {
+        map.overlays.clear()
+        orders.forEach { order ->
+            val marker = Marker(map)
+            marker.position = GeoPoint(order.restaurantLat, order.restaurantLng)
+            marker.title = "Restaurant Pickup"
+            marker.setOnMarkerClickListener { _, _ ->
+                activeOrder = order
+                btnNavigate.visibility = View.VISIBLE
+                Toast.makeText(this, "Target Locked: Order ${order.orderId}", Toast.LENGTH_SHORT).show()
+                true
+            }
+            map.overlays.add(marker)
+        }
+        map.invalidate()
+    }
+
+    override fun onResume() { super.onResume(); map.onResume() }
+    override fun onPause() { super.onPause(); map.onPause() }
 }
