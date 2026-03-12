@@ -17,9 +17,11 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         if (userRepository.getCurrentUserId() != null) {
             startActivity(Intent(this, MainActivity::class.java))
-            finish(); return
+            finish()
+            return
         }
 
         setContentView(R.layout.activity_login)
@@ -30,7 +32,8 @@ class LoginActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             val name = etName.text.toString()
-            val phone = etUserPhone.text.toString()
+            val phone = etPhone.text.toString()
+            
             if (name.isEmpty() || phone.isEmpty()) return@setOnClickListener
 
             pb.visibility = View.VISIBLE
@@ -39,7 +42,6 @@ class LoginActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     userRepository.loginAnonymously()
-                    // Save identity to local storage
                     val prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
                     prefs.edit().putString("name", name).putString("phone", phone).apply()
                     
