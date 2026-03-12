@@ -14,6 +14,7 @@ import com.bayramenu.shared.repository.OrderRepository
 import com.bayramenu.shared.repository.UserRepository
 import com.bayramenu.shared.util.NavigationEngine
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
@@ -23,47 +24,41 @@ import org.osmdroid.views.overlay.Marker
 class DriverActivity : AppCompatActivity() {
     private val orderRepository = OrderRepository()
     private val userRepository = UserRepository()
-    
     private var map: MapView? = null
-    private var btnNavigate: FloatingActionButton? = null
-    private var btnClaim: Button? = null
     private var llControls: LinearLayout? = null
     private var activeOrder: Order? = null
+    private var isBeaconActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Configuration.getInstance().userAgentValue = MapConstants.USER_AGENT
         setContentView(R.layout.activity_driver)
-        
-        map = findViewById(R.id.map)
-        btnNavigate = findViewById(R.id.btnNavigate)
-        btnClaim = findViewById(R.id.btnClaim)
-        llControls = findViewById(R.id.llControls)
-        
+        map = findViewById(R.id.map); llControls = findViewById(R.id.llControls)
         initMap()
-
         orderRepository.listenForAvailableDeliveries { orders -> drawRadarPins(orders) }
 
-        btnClaim?.setOnClickListener {
-            val driverId = userRepository.getCurrentUserId() ?: "unknown_driver"
+        findViewById<Button>(R.id.btnClaim).setOnClickListener {
+            val driverId = userRepository.getCurrentUserId() ?: "driver_guest"
             activeOrder?.let { order ->
                 lifecycleScope.launch {
                     try {
                         orderRepository.claimOrder(order.orderId, driverId)
-                        Toast.makeText(this@DriverActivity, "MISSION STARTED", Toast.LENGTH_SHORT).show()
-                        btnClaim?.visibility = View.GONE // Hide claim after success
-                    } catch (e: Exception) {
-                        Toast.makeText(this@DriverActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+                        isBeaconActive = true
+                        startBeacon(order.orderId)
+                        Toast.makeText(this@DriverActivity, "BEACON ACTIVATED", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) { }
                 }
             }
         }
+    }
 
-        btnNavigate?.setOnClickListener {
-            activeOrder?.let { order ->
-                val lat = if (order.status == OrderStatus.OUT_FOR_DELIVERY) order.customerLat else order.restaurantLat
-                val lng = if (order.status == OrderStatus.OUT_FOR_DELIVERY) order.customerLng else order.restaurantLng
-                NavigationEngine.launchNavigation(this, lat, lng)
+    private fun startBeacon(orderId: String) {
+        lifecycleScope.launch {
+            var simLat = 6.0206
+            while(isBeaconActive) {
+                simLat += 0.0005 // Simulate movement
+                orderRepository.updateDriverLocation(orderId, simLat, 37.5534)
+                delay(3000) // Update every 3 seconds
             }
         }
     }
@@ -77,20 +72,17 @@ class DriverActivity : AppCompatActivity() {
     private fun drawRadarPins(orders: List<Order>) {
         map?.overlays?.clear()
         orders.forEach { order ->
-            val m = map ?: return@forEach
-            val marker = Marker(m)
-            marker.position = GeoPoint(order.restaurantLat, order.restaurantLng)
-            marker.title = "New Job Available"
-            marker.setOnMarkerClickListener { _, _ ->
-                activeOrder = order
-                llControls?.visibility = View.VISIBLE
-                true
+            val marker = Marker(map).apply {
+                position = GeoPoint(order.restaurantLat, order.restaurantLng)
+                title = "Job Available"
+                setOnMarkerClickListener { _, _ ->
+                    activeOrder = order
+                    llControls?.visibility = View.VISIBLE
+                    true
+                }
             }
             map?.overlays?.add(marker)
         }
         map?.invalidate()
     }
-
-    override fun onResume() { super.onResume(); map?.onResume() }
-    override fun onPause() { super.onPause(); map?.onPause() }
 }

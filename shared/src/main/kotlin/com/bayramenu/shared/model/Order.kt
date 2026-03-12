@@ -12,12 +12,14 @@ data class Order(
     val chapaTransactionId: String = "",
     val status: OrderStatus = OrderStatus.PENDING,
     val timestamp: Long = System.currentTimeMillis(),
-    // Imperial Coordinate Precision
-    val restaurantLat: Double = 6.0206, // Default Arba Minch
+    val restaurantLat: Double = 6.0206,
     val restaurantLng: Double = 37.5534,
-    val customerLat: Double = 0.0,
-    val customerLng: Double = 0.0,
-    val driverId: String? = null
+    val customerLat: Double = 6.0250,
+    val customerLng: Double = 37.5600,
+    val driverId: String? = null,
+    // THE BEACON FIELDS
+    val driverLat: Double = 0.0,
+    val driverLng: Double = 0.0
 )
 
 data class OrderItem(

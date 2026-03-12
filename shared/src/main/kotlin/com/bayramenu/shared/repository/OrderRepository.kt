@@ -48,8 +48,7 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
         collection.document(orderId).update("driverId", driverId, "status", OrderStatus.OUT_FOR_DELIVERY.name).await()
     }
 
-    // THE BEACON: Update Driver GPS in the Order Document
     suspend fun updateDriverLocation(orderId: String, lat: Double, lng: Double) {
-        collection.document(orderId).update("restaurantLat", lat, "restaurantLng", lng).await()
+        collection.document(orderId).update("driverLat", lat, "driverLng", lng).await()
     }
 }

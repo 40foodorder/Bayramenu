@@ -31,7 +31,7 @@ class TrackingActivity : AppCompatActivity() {
         lifecycleScope.launch {
             orderRepository.observeOrder(orderId).collect { order ->
                 order?.let {
-                    val pos = GeoPoint(it.restaurantLat, it.restaurantLng)
+                    val pos = GeoPoint(it.driverLat, it.driverLng)
                     driverMarker.position = pos
                     map.controller.animateTo(pos)
                     findViewById<TextView>(R.id.tvStatus).text = "Status: ${it.status}"
