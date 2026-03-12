@@ -34,13 +34,11 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
             }
     }
 
-    // NEW: Real-time Financial Stream for Drivers
-    fun getDriverEarningsStream(driverId: String): Flow<Double> = callbackFlow {
-        val sub = collection.whereEqualTo("driverId", driverId)
-            .whereEqualTo("status", OrderStatus.DELIVERED.name)
+    fun getMyOrders(customerId: String): Flow<List<Order>> = callbackFlow {
+        val sub = collection.whereEqualTo("customerId", customerId)
             .addSnapshotListener { snapshot, _ ->
-                val total = snapshot?.documents?.sumOf { it.getDouble("deliveryFee") ?: 0.0 } ?: 0.0
-                trySend(total)
+                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
+                trySend(orders)
             }
         awaitClose { sub.remove() }
     }
@@ -62,5 +60,15 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
 
     suspend fun updateDriverLocation(orderId: String, lat: Double, lng: Double) {
         collection.document(orderId).update("driverLat", lat, "driverLng", lng).await()
+    }
+
+    fun getDriverEarningsStream(driverId: String): Flow<Double> = callbackFlow {
+        val sub = collection.whereEqualTo("driverId", driverId)
+            .whereEqualTo("status", OrderStatus.DELIVERED.name)
+            .addSnapshotListener { snapshot, _ ->
+                val total = snapshot?.documents?.sumOf { it.getDouble("deliveryFee") ?: 0.0 } ?: 0.0
+                trySend(total)
+            }
+        awaitClose { sub.remove() }
     }
 }
