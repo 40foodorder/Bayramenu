@@ -50,7 +50,7 @@ class MenuActivity : AppCompatActivity() {
         }
 
         btnCheckout.setOnClickListener {
-            val intent = Intent(this, CheckoutActivity::class.java)
+            val intent = Intent(this, CartActivity::class.java)
             intent.putExtra("RESTAURANT_ID", restaurantId)
             startActivity(intent)
         }

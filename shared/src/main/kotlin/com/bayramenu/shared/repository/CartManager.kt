@@ -20,9 +20,20 @@ object CartManager {
         _cart.value = currentCart.copy()
     }
 
-    fun clearCart() {
-        _cart.value = Cart()
+    fun removeItem(foodId: String) {
+        val currentCart = _cart.value
+        currentCart.items.remove(foodId)
+        _cart.value = currentCart.copy()
     }
 
+    fun updateQuantity(foodId: String, delta: Int) {
+        val currentCart = _cart.value
+        val item = currentCart.items[foodId] ?: return
+        item.quantity += delta
+        if (item.quantity <= 0) currentCart.items.remove(foodId)
+        _cart.value = currentCart.copy()
+    }
+
+    fun clearCart() { _cart.value = Cart() }
     fun getItemCount(): Int = _cart.value.items.values.sumOf { it.quantity }
 }
