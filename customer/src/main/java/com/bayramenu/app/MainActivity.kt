@@ -10,13 +10,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bayramenu.shared.repository.FirebaseRestaurantRepository
+import com.bayramenu.shared.repository.RestaurantRepository
 import com.bayramenu.shared.model.Restaurant
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private val repository = FirebaseRestaurantRepository()
+    private val repository = RestaurantRepository()
     private lateinit var adapter: RestaurantAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {

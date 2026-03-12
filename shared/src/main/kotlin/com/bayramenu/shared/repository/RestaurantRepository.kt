@@ -10,6 +10,7 @@ import kotlinx.coroutines.tasks.await
 class RestaurantRepository(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
     private val collection = firestore.collection("restaurants")
 
+    // Used by Customer: Real-time stream of all restaurants
     fun getRestaurantsStream(): Flow<List<Restaurant>> = callbackFlow {
         val sub = collection.addSnapshotListener { snapshot, _ ->
             val list = snapshot?.documents?.mapNotNull { it.toObject(Restaurant::class.java)?.copy(id = it.id) } ?: emptyList()
@@ -18,7 +19,7 @@ class RestaurantRepository(private val firestore: FirebaseFirestore = FirebaseFi
         awaitClose { sub.remove() }
     }
 
-    // NEW: Link a user to a specific restaurant
+    // Used by Partner: Register a new hotel
     suspend fun createRestaurant(restaurant: Restaurant, ownerId: String) {
         val data = hashMapOf(
             "name" to restaurant.name,
@@ -30,7 +31,9 @@ class RestaurantRepository(private val firestore: FirebaseFirestore = FirebaseFi
         collection.document(ownerId).set(data).await()
     }
 
+    // Used by Partner: Check if user already owns a hotel
     suspend fun getRestaurantByOwner(ownerId: String): Restaurant? {
-        return collection.document(ownerId).get().await().toObject(Restaurant::class.java)
+        val doc = collection.document(ownerId).get().await()
+        return if (doc.exists()) doc.toObject(Restaurant::class.java)?.copy(id = doc.id) else null
     }
 }
