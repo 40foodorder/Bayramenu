@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Register Your Hotel" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="32dp"/>
+    <EditText android:id="@+id/etHotelName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Hotel Name"/>
+    <EditText android:id="@+id/etHotelAddress" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Location (e.g. Arba Minch, Secha)"/>
+    <Button android:id="@+id/btnRegisterHotel" android:layout_width="match_parent" android:layout_height="60dp" android:text="START SELLING" android:layout_marginTop="32dp" android:backgroundTint="#4CAF50"/>
+</LinearLayout>
