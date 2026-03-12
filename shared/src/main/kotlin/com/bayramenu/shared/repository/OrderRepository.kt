@@ -31,15 +31,14 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
             }
     }
 
-    // TACTICAL HANDOVER: Assign Driver and Update Status
+    suspend fun updateOrderStatus(orderId: String, newStatus: OrderStatus) {
+        firestore.collection("orders").document(orderId).update("status", newStatus.name).await()
+    }
+
     suspend fun claimOrder(orderId: String, driverId: String) {
         firestore.collection("orders").document(orderId).update(
             "driverId", driverId,
             "status", OrderStatus.OUT_FOR_DELIVERY.name
         ).await()
-    }
-
-    suspend fun completeDelivery(orderId: String) {
-        firestore.collection("orders").document(orderId).update("status", OrderStatus.DELIVERED.name).await()
     }
 }

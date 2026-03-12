@@ -19,14 +19,11 @@ class PartnerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_partner)
 
-        // Pass the click action to the adapter
         adapter = OrderAdapter { order -> acceptOrder(order) }
-
         val rv = findViewById<RecyclerView>(R.id.rvOrders)
         rv.layoutManager = LinearLayoutManager(this)
         rv.adapter = adapter
 
-        // Listen for all orders for this restaurant
         orderRepository.listenForOrders("RESTAURANT_ID_123") { orders -> 
             adapter.updateOrders(orders) 
         }
