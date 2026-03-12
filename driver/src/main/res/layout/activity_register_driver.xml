@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Courier Onboarding" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="32dp"/>
+    <EditText android:id="@+id/etDriverName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Full Name"/>
+    <EditText android:id="@+id/etVehicleType" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Vehicle (Bajaj / Motorbike)"/>
+    <EditText android:id="@+id/etPlateNumber" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Plate Number"/>
+    <Button android:id="@+id/btnRegisterDriver" android:layout_width="match_parent" android:layout_height="60dp" android:text="START DRIVING" android:layout_marginTop="32dp" android:backgroundTint="#2196F3"/>
+</LinearLayout>
