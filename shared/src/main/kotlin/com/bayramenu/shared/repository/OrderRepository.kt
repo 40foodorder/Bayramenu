@@ -3,6 +3,7 @@ package com.bayramenu.shared.repository
 import com.bayramenu.shared.model.Order
 import com.bayramenu.shared.model.OrderStatus
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
@@ -17,6 +18,7 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
         return doc.id
     }
 
+    // For Partner: All orders for a restaurant
     fun listenForOrders(restaurantId: String, onOrdersReceived: (List<Order>) -> Unit) {
         collection.whereEqualTo("restaurantId", restaurantId)
             .addSnapshotListener { snapshot, _ ->
@@ -25,12 +27,24 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
             }
     }
 
+    // For Driver: All orders waiting for pickup
     fun listenForAvailableDeliveries(onOrdersReceived: (List<Order>) -> Unit) {
         collection.whereEqualTo("status", OrderStatus.ACCEPTED.name)
             .addSnapshotListener { snapshot, _ ->
                 val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
                 onOrdersReceived(orders)
             }
+    }
+
+    // NEW: For Customer - Real-time stream of THEIR orders
+    fun getMyOrders(customerId: String): Flow<List<Order>> = callbackFlow {
+        val sub = collection.whereEqualTo("customerId", customerId)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
+                trySend(orders)
+            }
+        awaitClose { sub.remove() }
     }
 
     fun observeOrder(orderId: String): Flow<Order?> = callbackFlow {
