@@ -11,6 +11,7 @@
         android:padding="16dp"
         android:textStyle="bold"/>
     <androidx.recyclerview.widget.RecyclerView
+    <Button android:id="@+id/btnGoToMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ADD FOOD TO MENU" android:layout_margin="16dp" android:backgroundTint="#2196F3"/>
         android:id="@+id/rvOrders"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

@@ -1,6 +1,8 @@
 package com.bayramenu.partner
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +20,10 @@ class PartnerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_partner)
+
+        findViewById<Button>(R.id.btnGoToMenu).setOnClickListener {
+            startActivity(Intent(this, AddMenuItemActivity::class.java))
+        }
 
         adapter = OrderAdapter { order -> acceptOrder(order) }
         val rv = findViewById<RecyclerView>(R.id.rvOrders)

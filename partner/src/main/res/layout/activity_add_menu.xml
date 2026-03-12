@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Add New Food" android:textSize="24sp" android:textStyle="bold" android:layout_marginBottom="24dp"/>
+    <EditText android:id="@+id/etFoodName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Food Name (e.g. Burger)"/>
+    <EditText android:id="@+id/etFoodPrice" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Price (ETB)" android:inputType="numberDecimal"/>
+    <EditText android:id="@+id/etFoodDesc" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Description" android:minLines="3" android:gravity="top"/>
+    <Button android:id="@+id/btnSaveFood" android:layout_width="match_parent" android:layout_height="60dp" android:text="SAVE TO MENU" android:layout_marginTop="32dp" android:backgroundTint="#4CAF50"/>
+</LinearLayout>
