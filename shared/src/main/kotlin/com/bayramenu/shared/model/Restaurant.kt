@@ -6,5 +6,6 @@ data class Restaurant(
     val address: String = "",
     val imageUrl: String = "",
     val rating: Float = 0.0f,
-    val isOpen: Boolean = true
+    val isOpen: Boolean = true,
+    val category: String = "All"
 )
