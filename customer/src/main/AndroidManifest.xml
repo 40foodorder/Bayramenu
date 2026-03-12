@@ -17,5 +17,6 @@
         <activity android:name=".CheckoutActivity" />
         <activity android:name=".TrackingActivity" />
         <activity android:name=".OrderHistoryActivity" />
+        <activity android:name=".PaymentActivity" />
     </application>
 </manifest>

@@ -1,5 +1,6 @@
 package com.bayramenu.app
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -10,73 +11,59 @@ import com.bayramenu.shared.model.Order
 import com.bayramenu.shared.model.OrderItem
 import com.bayramenu.shared.repository.CartManager
 import com.bayramenu.shared.repository.OrderRepository
+import com.bayramenu.shared.repository.UserRepository
 import kotlinx.coroutines.launch
 
 class CheckoutActivity : AppCompatActivity() {
-
     private val orderRepository = OrderRepository()
+    private val userRepo = UserRepository()
     private var restaurantId: String = ""
+    private var totalToPay: Double = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_checkout)
 
         restaurantId = intent.getStringExtra("RESTAURANT_ID") ?: return finish()
-
         val tvDetails = findViewById<TextView>(R.id.tvOrderDetails)
         val btnPay = findViewById<Button>(R.id.btnPay)
 
-        val currentCart = CartManager.cart.value
-        val subtotal = currentCart.getTotal()
-        
-        // MVP: Hardcoded delivery fee for now (Phase 10 will add GPS calculator)
-        val deliveryFee = 35.0 
-        val finalTotal = subtotal + deliveryFee
+        val cart = CartManager.cart.value
+        totalToPay = cart.getTotal() + 35.0 // Subtotal + Delivery
 
-        // Build Summary Text
-        val summary = StringBuilder()
-        currentCart.items.values.forEach { item ->
-            summary.append("${item.quantity}x ${item.name} - ${item.price * item.quantity} ETB\n")
-        }
-        summary.append("\nSubtotal: $subtotal ETB")
-        summary.append("\nDelivery: $deliveryFee ETB")
-        summary.append("\n\nTotal to Pay: $finalTotal ETB")
-
-        tvDetails.text = summary.toString()
+        tvDetails.text = "Items: ${CartManager.getItemCount()}\nTotal: $totalToPay ETB"
 
         btnPay.setOnClickListener {
-            // In Phase 8.5 we will trigger Chapa SDK here. 
-            // For now, we simulate a successful payment and push the order.
-            finalizeOrder(finalTotal)
+            // Step 1: Open Chapa WebView
+            val intent = Intent(this, PaymentActivity::class.java)
+            // Note: In production, generate this URL via your backend/Chapa API
+            intent.putExtra("CHECKOUT_URL", "https://checkout.chapa.co/checkout/payment-demo") 
+            startActivityForResult(intent, 99)
         }
     }
 
-    private fun finalizeOrder(total: Double) {
-        val cartItems = CartManager.cart.value.items.values.map {
-            OrderItem(foodId = it.foodId, name = it.name, price = it.price, quantity = it.quantity)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 99 && resultCode == RESULT_OK) {
+            finalizeOrder()
         }
+    }
 
+    private fun finalizeOrder() {
         val order = Order(
-            customerId = com.bayramenu.shared.repository.UserRepository().getCurrentUserId() ?: "unknown", // MVP hardcoded user
+            customerId = userRepo.getCurrentUserId() ?: "guest",
             restaurantId = restaurantId,
-            items = cartItems,
-            totalAmount = total,
-            deliveryFee = 35.0,
-            chapaTransactionId = "CHAPA_SIM_999" // Simulated Payment
+            totalAmount = totalToPay,
+            status = com.bayramenu.shared.model.OrderStatus.PENDING,
+            chapaTransactionId = "TXN_${System.currentTimeMillis()}"
         )
-
         lifecycleScope.launch {
-            try {
-                val orderId = orderRepository.placeOrder(order)
-                Toast.makeText(this@CheckoutActivity, "Payment Success! Order #$orderId sent to kitchen.", Toast.LENGTH_LONG).show()
-                CartManager.clearCart() // Clear memory
-                val intent = android.content.Intent(this@CheckoutActivity, TrackingActivity::class.java)
-                intent.putExtra("ORDER_ID", orderId)
-                startActivity(intent)
-                finish()
-            } catch (e: Exception) {
-                Toast.makeText(this@CheckoutActivity, "Order Failed: ${e.message}", Toast.LENGTH_LONG).show()
-            }
+            val orderId = orderRepository.placeOrder(order)
+            CartManager.clearCart()
+            val intent = Intent(this@CheckoutActivity, TrackingActivity::class.java)
+            intent.putExtra("ORDER_ID", orderId)
+            startActivity(intent)
+            finish()
         }
     }
 }
