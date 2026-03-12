@@ -9,18 +9,33 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnNavigate"
+    <LinearLayout
+        android:id="@+id/llControls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
+        android:layout_centerHorizontal="true"
         android:layout_margin="24dp"
-        android:src="@android:drawable/ic_menu_directions"
-        android:visibility="gone"
-        app:backgroundTint="#2196F3"
-        app:tint="#FFF"
-        android:elevation="12dp"
-        android:contentDescription="Navigate"/>
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnClaim"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:text="CLAIM ORDER"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFF"
+            android:layout_marginEnd="8dp"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnNavigate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_directions"
+            app:backgroundTint="#2196F3"
+            app:tint="#FFF"
+            android:contentDescription="NAV"/>
+    </LinearLayout>
 
 </RelativeLayout>
