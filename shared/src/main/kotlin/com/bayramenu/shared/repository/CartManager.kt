@@ -9,7 +9,6 @@ object CartManager {
     private val _cart = MutableStateFlow(Cart())
     val cart: StateFlow<Cart> = _cart
 
-    fun clearCart() { _cart.value = Cart() }
     fun addItem(item: CartItem) {
         val currentCart = _cart.value
         val existing = currentCart.items[item.foodId]
@@ -20,4 +19,10 @@ object CartManager {
         }
         _cart.value = currentCart.copy()
     }
+
+    fun clearCart() {
+        _cart.value = Cart()
+    }
+
+    fun getItemCount(): Int = _cart.value.items.values.sumOf { it.quantity }
 }

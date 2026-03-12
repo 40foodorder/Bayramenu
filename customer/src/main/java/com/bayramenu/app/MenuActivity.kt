@@ -1,14 +1,17 @@
 package com.bayramenu.app
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bayramenu.shared.repository.MenuRepository
 import com.bayramenu.shared.repository.CartManager
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class MenuActivity : AppCompatActivity() {
@@ -22,27 +25,32 @@ class MenuActivity : AppCompatActivity() {
         val restaurantId = intent.getStringExtra("RESTAURANT_ID") ?: return finish()
         
         val rvMenu = findViewById<RecyclerView>(R.id.rvMenu)
+        val cvCartSummary = findViewById<View>(R.id.cvCartSummary)
+        val tvCount = findViewById<TextView>(R.id.tvCartCount)
+        val tvTotal = findViewById<TextView>(R.id.tvCartTotal)
         val btnCheckout = findViewById<Button>(R.id.btnCheckout)
         
         rvMenu.layoutManager = LinearLayoutManager(this)
         rvMenu.adapter = adapter
 
-        // Fetch Menu
         lifecycleScope.launch {
-            val items = repository.getMenu(restaurantId)
-            adapter.submitList(items)
+            adapter.submitList(repository.getMenu(restaurantId))
         }
 
-        // Listen to Cart changes to update Checkout button price
         lifecycleScope.launch {
             CartManager.cart.collect { cart ->
-                btnCheckout.text = "Checkout: ${cart.getTotal()} ETB"
+                if (cart.items.isNotEmpty()) {
+                    cvCartSummary.visibility = View.VISIBLE
+                    tvCount.text = "${CartManager.getItemCount()} Items"
+                    tvTotal.text = "${cart.getTotal()} ETB"
+                } else {
+                    cvCartSummary.visibility = View.GONE
+                }
             }
         }
 
         btnCheckout.setOnClickListener {
-            Toast.makeText(this, "Proceeding to checkout...", Toast.LENGTH_SHORT).show()
-            val intent = android.content.Intent(this, CheckoutActivity::class.java)
+            val intent = Intent(this, CheckoutActivity::class.java)
             intent.putExtra("RESTAURANT_ID", restaurantId)
             startActivity(intent)
         }
