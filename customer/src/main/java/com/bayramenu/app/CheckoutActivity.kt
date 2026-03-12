@@ -70,7 +70,10 @@ class CheckoutActivity : AppCompatActivity() {
                 val orderId = orderRepository.placeOrder(order)
                 Toast.makeText(this@CheckoutActivity, "Payment Success! Order #$orderId sent to kitchen.", Toast.LENGTH_LONG).show()
                 CartManager.clearCart() // Clear memory
-                finish() // Return to Menu
+                val intent = android.content.Intent(this@CheckoutActivity, TrackingActivity::class.java)
+                intent.putExtra("ORDER_ID", orderId)
+                startActivity(intent)
+                finish()
             } catch (e: Exception) {
                 Toast.makeText(this@CheckoutActivity, "Order Failed: ${e.message}", Toast.LENGTH_LONG).show()
             }

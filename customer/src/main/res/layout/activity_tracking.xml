@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <org.osmdroid.views.MapView android:id="@+id/mapTracking" android:layout_width="match_parent" android:layout_height="match_parent" />
+    <CardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="16dp" android:layout_alignParentBottom="true">
+        <TextView android:id="@+id/tvStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:text="Tracking Driver..." android:textStyle="bold" android:textSize="18sp" android:gravity="center"/>
+    </CardView>
+</RelativeLayout>

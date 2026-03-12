@@ -15,5 +15,6 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".MenuActivity" />
         <activity android:name=".CheckoutActivity" />
+        <activity android:name=".TrackingActivity" />
     </application>
 </manifest>
