@@ -14,5 +14,6 @@
         </activity>
         <activity android:name=".AddMenuItemActivity" />
         <activity android:name=".RegisterHotelActivity" />
+        <activity android:name=".RegisterHotelActivity" />
     </application>
 </manifest>
