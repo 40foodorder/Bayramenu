@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -15,7 +16,10 @@ import com.bayramenu.shared.model.Order
 import com.bayramenu.shared.model.OrderStatus
 import com.bayramenu.shared.repository.OrderRepository
 import com.bayramenu.shared.repository.UserRepository
+import com.bayramenu.shared.util.NavigationEngine
 import com.google.android.gms.location.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
@@ -26,9 +30,10 @@ class DriverActivity : AppCompatActivity() {
     private val orderRepo = OrderRepository()
     private val userRepo = UserRepository()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    
     private var map: MapView? = null
     private var llControls: LinearLayout? = null
+    private var btnClaim: Button? = null
+    private var btnComplete: Button? = null
     private var activeOrder: Order? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,21 +43,37 @@ class DriverActivity : AppCompatActivity() {
         
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         map = findViewById(R.id.map); llControls = findViewById(R.id.llControls)
-        
+        btnClaim = findViewById(R.id.btnClaim); btnComplete = findViewById(R.id.btnComplete)
+        val tvEarnings = findViewById<TextView>(R.id.tvEarnings)
+
         initMap()
         orderRepo.listenForAvailableDeliveries { orders -> drawRadarPins(orders) }
 
-        findViewById<Button>(R.id.btnClaim).setOnClickListener {
-            checkLocationPermissions()
+        // START EARNINGS OBSERVER
+        val driverId = userRepo.getCurrentUserId() ?: "driver_guest"
+        lifecycleScope.launch {
+            orderRepo.getDriverEarningsStream(driverId).collect { total ->
+                tvEarnings.text = "\$total ETB"
+            }
+        }
+
+        btnClaim?.setOnClickListener { checkLocationPermissions() }
+        
+        btnComplete?.setOnClickListener {
+            activeOrder?.let { order ->
+                lifecycleScope.launch {
+                    orderRepo.updateOrderStatus(order.orderId, OrderStatus.DELIVERED)
+                    Toast.makeText(this@DriverActivity, "WALLET UPDATED", Toast.LENGTH_SHORT).show()
+                    llControls?.visibility = View.GONE
+                }
+            }
         }
     }
 
     private fun checkLocationPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 100)
-        } else {
-            claimAndStartBeacon()
-        }
+        } else { claimAndStartBeacon() }
     }
 
     private fun claimAndStartBeacon() {
@@ -61,8 +82,9 @@ class DriverActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 try {
                     orderRepo.claimOrder(order.orderId, driverId)
+                    btnClaim?.visibility = View.GONE
+                    btnComplete?.visibility = View.VISIBLE
                     startRealTimeBeacon(order.orderId)
-                    Toast.makeText(this@DriverActivity, "GPS BEACON ACTIVE", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) { }
             }
         }
@@ -73,9 +95,7 @@ class DriverActivity : AppCompatActivity() {
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
-                    lifecycleScope.launch {
-                        orderRepo.updateDriverLocation(orderId, location.latitude, location.longitude)
-                    }
+                    lifecycleScope.launch { orderRepo.updateDriverLocation(orderId, location.latitude, location.longitude) }
                 }
             }
         }
@@ -95,7 +115,7 @@ class DriverActivity : AppCompatActivity() {
         orders.forEach { order ->
             val marker = Marker(map).apply {
                 position = GeoPoint(order.restaurantLat, order.restaurantLng)
-                title = "Delivery Job"
+                title = "Delivery"
                 setOnMarkerClickListener { _, _ ->
                     activeOrder = order; llControls?.visibility = View.VISIBLE; true
                 }
@@ -104,4 +124,7 @@ class DriverActivity : AppCompatActivity() {
         }
         map?.invalidate()
     }
+
+    override fun onResume() { super.onResume(); map?.onResume() }
+    override fun onPause() { super.onPause(); map?.onPause() }
 }

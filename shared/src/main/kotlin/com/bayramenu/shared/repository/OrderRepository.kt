@@ -18,7 +18,6 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
         return doc.id
     }
 
-    // For Partner: All orders for a restaurant
     fun listenForOrders(restaurantId: String, onOrdersReceived: (List<Order>) -> Unit) {
         collection.whereEqualTo("restaurantId", restaurantId)
             .addSnapshotListener { snapshot, _ ->
@@ -27,7 +26,6 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
             }
     }
 
-    // For Driver: All orders waiting for pickup
     fun listenForAvailableDeliveries(onOrdersReceived: (List<Order>) -> Unit) {
         collection.whereEqualTo("status", OrderStatus.ACCEPTED.name)
             .addSnapshotListener { snapshot, _ ->
@@ -36,13 +34,13 @@ class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFiresto
             }
     }
 
-    // NEW: For Customer - Real-time stream of THEIR orders
-    fun getMyOrders(customerId: String): Flow<List<Order>> = callbackFlow {
-        val sub = collection.whereEqualTo("customerId", customerId)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
+    // NEW: Real-time Financial Stream for Drivers
+    fun getDriverEarningsStream(driverId: String): Flow<Double> = callbackFlow {
+        val sub = collection.whereEqualTo("driverId", driverId)
+            .whereEqualTo("status", OrderStatus.DELIVERED.name)
             .addSnapshotListener { snapshot, _ ->
-                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
-                trySend(orders)
+                val total = snapshot?.documents?.sumOf { it.getDouble("deliveryFee") ?: 0.0 } ?: 0.0
+                trySend(total)
             }
         awaitClose { sub.remove() }
     }
