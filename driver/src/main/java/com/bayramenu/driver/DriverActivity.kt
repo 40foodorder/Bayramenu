@@ -26,27 +26,43 @@ class DriverActivity : AppCompatActivity() {
     private val userRepository = UserRepository()
     private var map: MapView? = null
     private var llControls: LinearLayout? = null
+    private var btnClaim: Button? = null
+    private var btnComplete: Button? = null
     private var activeOrder: Order? = null
-    private var isBeaconActive = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Configuration.getInstance().userAgentValue = MapConstants.USER_AGENT
         setContentView(R.layout.activity_driver)
-        map = findViewById(R.id.map); llControls = findViewById(R.id.llControls)
+        
+        map = findViewById(R.id.map)
+        llControls = findViewById(R.id.llControls)
+        btnClaim = findViewById(R.id.btnClaim)
+        btnComplete = findViewById(R.id.btnComplete)
+        
         initMap()
         orderRepository.listenForAvailableDeliveries { orders -> drawRadarPins(orders) }
 
-        findViewById<Button>(R.id.btnClaim).setOnClickListener {
+        btnClaim?.setOnClickListener {
             val driverId = userRepository.getCurrentUserId() ?: "driver_guest"
             activeOrder?.let { order ->
                 lifecycleScope.launch {
-                    try {
-                        orderRepository.claimOrder(order.orderId, driverId)
-                        isBeaconActive = true
-                        startBeacon(order.orderId)
-                        Toast.makeText(this@DriverActivity, "BEACON ACTIVATED", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) { }
+                    orderRepository.claimOrder(order.orderId, driverId)
+                    btnClaim?.visibility = View.GONE
+                    btnComplete?.visibility = View.VISIBLE
+                    startBeacon(order.orderId)
+                }
+            }
+        }
+
+        btnComplete?.setOnClickListener {
+            activeOrder?.let { order ->
+                lifecycleScope.launch {
+                    orderRepository.updateOrderStatus(order.orderId, OrderStatus.DELIVERED)
+                    Toast.makeText(this@DriverActivity, "MISSION ACCOMPLISHED", Toast.LENGTH_LONG).show()
+                    llControls?.visibility = View.GONE
+                    map?.overlays?.clear()
+                    map?.invalidate()
                 }
             }
         }
@@ -55,10 +71,10 @@ class DriverActivity : AppCompatActivity() {
     private fun startBeacon(orderId: String) {
         lifecycleScope.launch {
             var simLat = 6.0206
-            while(isBeaconActive) {
-                simLat += 0.0005 // Simulate movement
+            while(true) {
+                simLat += 0.0002
                 orderRepository.updateDriverLocation(orderId, simLat, 37.5534)
-                delay(3000) // Update every 3 seconds
+                delay(4000)
             }
         }
     }
@@ -74,7 +90,7 @@ class DriverActivity : AppCompatActivity() {
         orders.forEach { order ->
             val marker = Marker(map).apply {
                 position = GeoPoint(order.restaurantLat, order.restaurantLng)
-                title = "Job Available"
+                title = "Pickup available"
                 setOnMarkerClickListener { _, _ ->
                     activeOrder = order
                     llControls?.visibility = View.VISIBLE

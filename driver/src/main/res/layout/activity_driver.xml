@@ -11,31 +11,39 @@
 
     <LinearLayout
         android:id="@+id/llControls"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="24dp"
-        android:orientation="horizontal"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:background="#AA000000"
         android:visibility="gone">
 
         <Button
             android:id="@+id/btnClaim"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="60dp"
             android:text="CLAIM ORDER"
             android:backgroundTint="#4CAF50"
+            android:textColor="#FFF"/>
+
+        <Button
+            android:id="@+id/btnComplete"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="MARK AS DELIVERED"
+            android:backgroundTint="#FF9800"
             android:textColor="#FFF"
-            android:layout_marginEnd="8dp"/>
+            android:visibility="gone"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnNavigate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
             android:src="@android:drawable/ic_menu_directions"
             app:backgroundTint="#2196F3"
-            app:tint="#FFF"
-            android:contentDescription="NAV"/>
+            app:tint="#FFF"/>
     </LinearLayout>
-
 </RelativeLayout>
