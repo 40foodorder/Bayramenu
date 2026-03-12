@@ -17,9 +17,11 @@ data class Order(
     val customerLat: Double = 6.0250,
     val customerLng: Double = 37.5600,
     val driverId: String? = null,
-    // THE BEACON FIELDS
     val driverLat: Double = 0.0,
-    val driverLng: Double = 0.0
+    val driverLng: Double = 0.0,
+    // NEW: Identity Fields for Handshake
+    val customerName: String = "",
+    val customerPhone: String = ""
 )
 
 data class OrderItem(

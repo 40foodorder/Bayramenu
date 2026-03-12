@@ -5,27 +5,9 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome to Bayramenu"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="32dp"/>
-
-    <Button
-        android:id="@+id/btnLogin"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Enter App (Guest)"
-        android:textSize="18sp"
-        android:backgroundTint="#4CAF50"/>
-        
-    <ProgressBar
-        android:id="@+id/pbAuth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:visibility="gone"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bayramenu" android:textSize="32sp" android:textStyle="bold" android:textColor="#4CAF50" android:layout_marginBottom="32dp"/>
+    <EditText android:id="@+id/etUserName" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Your Name"/>
+    <EditText android:id="@+id/etUserPhone" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Phone Number" android:inputType="phone"/>
+    <Button android:id="@+id/btnLogin" android:layout_width="match_parent" android:layout_height="60dp" android:text="START ORDERING" android:layout_marginTop="24dp" android:backgroundTint="#4CAF50"/>
+    <ProgressBar android:id="@+id/pbAuth" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:visibility="gone"/>
 </LinearLayout>
