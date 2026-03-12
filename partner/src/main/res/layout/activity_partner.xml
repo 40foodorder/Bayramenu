@@ -3,16 +3,36 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Incoming Orders"
-        android:textSize="20sp"
+        android:text="Partner Dashboard"
+        android:textSize="22sp"
+        android:textStyle="bold"
         android:padding="16dp"
-        android:textStyle="bold"/>
+        android:background="#2196F3"
+        android:textColor="#FFF"/>
+
+    <Button
+        android:id="@+id/btnGoToMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ADD FOOD TO MENU"
+        android:layout_margin="16dp"
+        android:backgroundTint="#4CAF50"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Active Orders"
+        android:paddingStart="16dp"
+        android:textStyle="italic"
+        android:textColor="#757575"/>
+
     <androidx.recyclerview.widget.RecyclerView
-    <Button android:id="@+id/btnGoToMenu" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ADD FOOD TO MENU" android:layout_margin="16dp" android:backgroundTint="#2196F3"/>
         android:id="@+id/rvOrders"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:padding="8dp"/>
 </LinearLayout>
