@@ -3,41 +3,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
-    <org.osmdroid.views.MapView
-        android:id="@+id/map"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!-- TACTICAL EARNINGS BAR -->
+    <org.osmdroid.views.MapView android:id="@+id/map" android:layout_width="match_parent" android:layout_height="match_parent" />
+    
     <androidx.cardview.widget.CardView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="25dp"
-        app:cardElevation="8dp"
-        android:layout_centerHorizontal="true">
+        android:layout_margin="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="8dp">
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="10dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-            <TextView
+            android:padding="12dp"
+            android:gravity="center_vertical">
+            <TextView android:id="@+id/tvEarnings" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="0.00 ETB" android:textStyle="bold" android:textColor="#4CAF50"/>
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/swOnline"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Earnings: "
-                android:textStyle="bold"
-                android:textColor="#757575"/>
-            <TextView
-                android:id="@+id/tvEarnings"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="0.00 ETB"
-                android:textStyle="bold"
-                android:textColor="#4CAF50"
-                android:textSize="16sp"/>
+                android:text="GO ONLINE "
+                android:textStyle="bold"/>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
@@ -48,34 +33,10 @@
         android:layout_alignParentBottom="true"
         android:padding="16dp"
         android:orientation="vertical"
-        android:background="#AA000000"
+        android:background="#CC000000"
         android:visibility="gone">
-
-        <Button
-            android:id="@+id/btnClaim"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="CLAIM MISSION"
-            android:backgroundTint="#4CAF50"
-            android:textColor="#FFF"/>
-
-        <Button
-            android:id="@+id/btnComplete"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="FINISH DELIVERY"
-            android:backgroundTint="#FF9800"
-            android:textColor="#FFF"
-            android:visibility="gone"/>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/btnNavigate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="8dp"
-            android:src="@android:drawable/ic_menu_directions"
-            app:backgroundTint="#2196F3"
-            app:tint="#FFF"/>
+        <Button android:id="@+id/btnClaim" android:layout_width="match_parent" android:layout_height="60dp" android:text="CLAIM MISSION" android:backgroundTint="#4CAF50"/>
+        <Button android:id="@+id/btnComplete" android:layout_width="match_parent" android:layout_height="60dp" android:text="FINISH DELIVERY" android:backgroundTint="#FF9800" android:visibility="gone"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@+id/btnNavigate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="end" android:layout_marginTop="8dp" android:src="@android:drawable/ic_menu_directions" app:backgroundTint="#2196F3"/>
     </LinearLayout>
 </RelativeLayout>

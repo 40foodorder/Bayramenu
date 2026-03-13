@@ -17,6 +17,7 @@ class UserRepository(
     }
 
     // NEW: Save Driver Profile
+    suspend fun updateDriverStatus(uid: String, online: Boolean) { firestore.collection("drivers").document(uid).update("isOnline", online).await() }
     suspend fun saveDriverProfile(driver: Driver) {
         firestore.collection("drivers").document(driver.uid).set(driver).await()
     }
