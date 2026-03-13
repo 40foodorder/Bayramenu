@@ -1,0 +1,4 @@
+-keep class com.bayramenu.shared.model.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn com.google.firebase.**

@@ -7,6 +7,7 @@ android {
     namespace 'com.bayramenu.driver'
     compileSdk 33
     defaultConfig {
+        multiDexEnabled true
         applicationId "com.bayramenu.driver"
         minSdk 24
         targetSdk 33

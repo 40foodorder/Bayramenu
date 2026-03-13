@@ -9,6 +9,7 @@ android {
     compileSdk 33
 
     defaultConfig {
+        multiDexEnabled true
         applicationId "com.bayramenu.app"
         minSdk 24
         targetSdk 33
