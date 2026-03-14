@@ -1,17 +1,27 @@
 package com.bayramenu.shared.repository
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
-class VerificationRepository(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
-    private val col = firestore.collection("verifications")
+
+class VerificationRepository {
+    // Note: If your database is NOT in us-central1, you might need the URL in the getInstance() call
+    private val db = FirebaseDatabase.getInstance().getReference("verifications")
+
     suspend fun savePin(phone: String, pin: String) {
-        val data = mapOf("pin" to pin, "timestamp" to System.currentTimeMillis())
-        col.document(phone).set(data).await()
+        val data = mapOf(
+            "pin" to pin,
+            "timestamp" to System.currentTimeMillis()
+        )
+        // RTDB uses .child().setValue()
+        db.child(phone.replace("+", "")).setValue(data).await()
     }
+
     suspend fun validatePin(phone: String, inputPin: String): Boolean {
-        val doc = col.document(phone).get().await()
-        if (!doc.exists()) return false
-        val pin = doc.getString("pin")
-        val ts = doc.getLong("timestamp") ?: 0L
+        val snapshot = db.child(phone.replace("+", "")).get().await()
+        if (!snapshot.exists()) return false
+        
+        val pin = snapshot.child("pin").getValue(String::class.java)
+        val ts = snapshot.child("timestamp").getValue(Long::class.java) ?: 0L
+        
         return pin == inputPin && (System.currentTimeMillis() - ts < 600000)
     }
 }
