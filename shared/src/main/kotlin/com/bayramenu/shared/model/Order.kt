@@ -1,4 +1,7 @@
 package com.bayramenu.shared.model
+
+enum class OrderStatus { PENDING, ACCEPTED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED }
+
 data class Order(
     val orderId: String = "",
     val customerId: String = "",
@@ -19,4 +22,5 @@ data class Order(
     val customerName: String = "",
     val customerPhone: String = ""
 )
+
 data class OrderItem(val foodId: String = "", val name: String = "", val price: Double = 0.0, val quantity: Int = 0)
