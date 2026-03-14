@@ -20,7 +20,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val btn = findViewById<Button>(R.id.btnRequestAccess)
+        val btn = findViewById<Button>(R.id.btnLogin)
         val etName = findViewById<EditText>(R.id.etRegName)
         val etPhone = findViewById<EditText>(R.id.etRegPhone)
         val etEmail = findViewById<EditText>(R.id.etRegEmail)
@@ -40,15 +40,10 @@ class LoginActivity : AppCompatActivity() {
             
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    // STEP 1: Authenticate First to clear Permission errors
                     uRepo.loginAnonymously()
-                    
                     val pin = (100000..999999).random().toString()
-                    
-                    // STEP 2: Save to Firestore
                     vRepo.savePin(phone, pin)
                     
-                    // STEP 3: Send Telegram
                     val text = "🚨 *Bayra Registry Alert*\n\nName: $name\nPhone: $phone\nPIN: *$pin*"
                     val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=$text&parse_mode=Markdown"
                     client.newCall(Request.Builder().url(url).build()).execute()
