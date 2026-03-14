@@ -17,8 +17,11 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (uRepo.getCurrentUserId() != null) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish(); return
+        }
         setContentView(R.layout.activity_login)
-
         val btn = findViewById<Button>(R.id.btnLogin)
         val etName = findViewById<EditText>(R.id.etRegName)
         val etPhone = findViewById<EditText>(R.id.etRegPhone)
@@ -28,38 +31,24 @@ class LoginActivity : AppCompatActivity() {
             val name = etName.text.toString().trim()
             val phone = etPhone.text.toString().trim()
             val email = etEmail.text.toString().trim()
-
-            if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) {
-                Toast.makeText(this, "Fields cannot be empty", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+            if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) return@setOnClickListener
 
             btn.isEnabled = false
-            Toast.makeText(this, "Contacting Imperial Registry...", Toast.LENGTH_SHORT).show()
-            
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    // Force login first to satisfy Firebase
                     uRepo.loginAnonymously()
-                    
                     val pin = (100000..999999).random().toString()
                     vRepo.savePin(phone, pin)
-                    
-                    val text = "🚨 *Registry Attempt*\nName: $name\nPhone: $phone\nEmail: $email\nPIN: *$pin*"
-                    val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=$text&parse_mode=Markdown"
+                    val text = "🚨 New Registry\nName: $name\nPhone: $phone\nPIN: $pin"
+                    val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=$text"
                     client.newCall(Request.Builder().url(url).build()).execute()
-
                     withContext(Dispatchers.Main) {
-                        getSharedPreferences("user_prefs", 0).edit()
-                            .putString("temp_phone", phone).putString("name", name).putString("email", email).apply()
+                        getSharedPreferences("user_prefs", 0).edit().putString("temp_phone", phone).putString("name", name).putString("email", email).apply()
                         startActivity(Intent(this@LoginActivity, VerificationActivity::class.java))
                         finish()
                     }
                 } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        btn.isEnabled = true
-                        Toast.makeText(this@LoginActivity, "Handshake Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
+                    withContext(Dispatchers.Main) { btn.isEnabled = true }
                 }
             }
         }
