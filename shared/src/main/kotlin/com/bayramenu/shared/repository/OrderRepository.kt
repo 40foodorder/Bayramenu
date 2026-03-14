@@ -42,11 +42,11 @@ class OrderRepository {
     }
 
     suspend fun updateOrderStatus(orderId: String, status: OrderStatus) {
-        db.child(orderId).child("status").setValue(status.name).await()
+        db.child(orderId).child("status").setValue(status).await()
     }
 
     suspend fun claimOrder(orderId: String, driverId: String) {
-        val updates = mapOf("driverId" to driverId, "status" to OrderStatus.OUT_FOR_DELIVERY.name)
+        val updates = mapOf("driverId" to driverId, "status" to OrderStatus.OUT_FOR_DELIVERY)
         db.child(orderId).updateChildren(updates).await()
     }
 
@@ -58,7 +58,7 @@ class OrderRepository {
     fun getDriverEarningsStream(driverId: String): Flow<Double> = callbackFlow {
         val listener = db.orderByChild("driverId").equalTo(driverId).addValueEventListener(object : com.google.firebase.database.ValueEventListener {
             override fun onDataChange(s: com.google.firebase.database.DataSnapshot) {
-                val total = s.children.filter { it.child("status").value == OrderStatus.DELIVERED.name }
+                val total = s.children.filter { it.child("status").getValue(String::class.java) == OrderStatus.DELIVERED.name }
                              .sumOf { it.child("deliveryFee").getValue(Double::class.java) ?: 0.0 }
                 trySend(total)
             }

@@ -10,7 +10,7 @@ data class Order(
     val totalAmount: Double = 0.0,
     val deliveryFee: Double = 0.0,
     val chapaTransactionId: String = "",
-    val status: String = "PENDING",
+    val status: OrderStatus = OrderStatus.PENDING,
     val timestamp: Long = 0,
     val restaurantLat: Double = 6.0206,
     val restaurantLng: Double = 37.5534,
