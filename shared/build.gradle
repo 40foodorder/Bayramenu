@@ -2,31 +2,20 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
 }
-
 repositories {
     google()
     mavenCentral()
 }
-
 android {
     namespace 'com.bayramenu.shared'
     compileSdk 33
     defaultConfig { minSdk 24 }
-    
-    sourceSets {
-        main {
-            kotlin.srcDirs = ['src/main/kotlin']
-        }
-    }
+    sourceSets { main { kotlin.srcDirs = ['src/main/kotlin'] } }
 }
-
 dependencies {
     api platform('com.google.firebase:firebase-bom:32.2.0')
     api 'com.google.firebase:firebase-firestore-ktx'
     api 'com.google.firebase:firebase-auth-ktx'
-    api 'com.google.firebase:firebase-messaging-ktx'
-    api 'com.google.firebase:firebase-messaging-ktx'
-    api 'com.google.firebase:firebase-messaging-ktx'
+    api 'com.google.firebase:firebase-database-ktx'
     api 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4'
-    api 'org.osmdroid:osmdroid-android:6.1.14'
 }
