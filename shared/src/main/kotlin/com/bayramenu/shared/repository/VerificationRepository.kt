@@ -4,11 +4,12 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 
 class VerificationRepository {
-    private val db = FirebaseDatabase.getInstance().getReference("verifications")
+    // TACTICAL FIX: Explicitly pointing to the Europe-West1 server
+    private val dbUrl = "https://bayraeats-default-rtdb.europe-west1.firebasedatabase.app"
+    private val db = FirebaseDatabase.getInstance(dbUrl).getReference("verifications")
 
     suspend fun savePin(phone: String, pin: String) {
-        // We add a 10-second timeout so it doesn't hang forever if the DB is offline
-        withTimeout(10000) {
+        withTimeout(15000) {
             val data = mapOf("pin" to pin, "timestamp" to System.currentTimeMillis())
             db.child(phone.replace("+", "")).setValue(data).await()
         }
