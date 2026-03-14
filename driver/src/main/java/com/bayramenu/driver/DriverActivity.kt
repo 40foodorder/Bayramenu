@@ -8,7 +8,6 @@ import com.bayramenu.shared.model.*
 import com.bayramenu.shared.repository.*
 import com.google.android.material.switchmaterial.SwitchMaterial
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
@@ -19,6 +18,7 @@ class DriverActivity : AppCompatActivity() {
     private val orderRepo = OrderRepository()
     private val userRepo = UserRepository()
     private var map: MapView? = null
+    private var llControls: View? = null
     private var activeOrder: Order? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,71 +27,65 @@ class DriverActivity : AppCompatActivity() {
         setContentView(R.layout.activity_driver)
 
         map = findViewById(R.id.map)
+        llControls = findViewById(R.id.llControls)
         val sw = findViewById<SwitchMaterial>(R.id.swOnline)
         val tvE = findViewById<TextView>(R.id.tvEarnings)
         
         map?.controller?.setZoom(15.0)
         map?.controller?.setCenter(GeoPoint(6.0206, 37.5534))
 
-        // TACTICAL CHECK: Ensure UID exists
         val uid = userRepo.getCurrentUserId()
         if (uid == null) {
-            Toast.makeText(this, "ERROR: Driver Not Logged In!", Toast.LENGTH_LONG).show()
-            sw.isEnabled = false
+            Toast.makeText(this, "AUTHENTICATING...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch { userRepo.loginAnonymously() }
         }
 
-        sw.setOnCheckedChangeListener { _, isChecked ->
-            val currentUid = uid ?: return@setOnCheckedChangeListener
-            
+        sw?.setOnCheckedChangeListener { _, isChecked ->
+            val currentUid = userRepo.getCurrentUserId() ?: return@setOnCheckedChangeListener
             lifecycleScope.launch {
                 try {
-                    // 1. Update Status in Cloud
                     userRepo.updateDriverStatus(currentUid, isChecked)
-                    
                     if (isChecked) {
-                        Toast.makeText(this@DriverActivity, "BEACON ONLINE", Toast.LENGTH_SHORT).show()
                         orderRepo.listenForAvailableDeliveries { orders ->
                             runOnUiThread { drawRadarPins(orders) }
                         }
                     } else {
-                        Toast.makeText(this@DriverActivity, "OFFLINE", Toast.LENGTH_SHORT).show()
                         map?.overlays?.clear()
                         map?.invalidate()
+                        llControls?.visibility = View.GONE
                     }
                 } catch (e: Exception) {
                     sw.isChecked = false
-                    Toast.makeText(this@DriverActivity, "Database Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@DriverActivity, "Sync Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        // Live Earnings Stream with Error Catching
-        if (uid != null) {
+        uid?.let { id ->
             lifecycleScope.launch {
-                orderRepo.getDriverEarningsStream(uid)
-                    .catch { e -> android.util.Log.e("DriverLog", "Earnings Error", e) }
-                    .collect { total ->
-                        tvE.text = "$total ETB"
-                    }
+                orderRepo.getDriverEarningsStream(id)
+                    .catch { }
+                    .collect { total -> tvE?.text = "$total ETB" }
             }
         }
     }
 
     private fun drawRadarPins(orders: List<Order>) {
-        map?.overlays?.clear()
+        val currentMap = map ?: return
+        currentMap.overlays.clear()
         orders.forEach { order ->
-            val m = Marker(map).apply {
+            val m = Marker(currentMap).apply {
                 position = GeoPoint(order.restaurantLat, order.restaurantLng)
-                title = "Order: ${order.totalAmount} ETB"
+                title = "Job: ${order.totalAmount} ETB"
                 setOnMarkerClickListener { _, _ ->
                     activeOrder = order
-                    findViewById<View>(R.id.llControls).visibility = View.VISIBLE
+                    llControls?.visibility = View.VISIBLE
                     true
                 }
             }
-            map?.overlays?.add(m)
+            currentMap.overlays.add(m)
         }
-        map?.invalidate()
+        currentMap.invalidate()
     }
 
     override fun onResume() { super.onResume(); map?.onResume() }

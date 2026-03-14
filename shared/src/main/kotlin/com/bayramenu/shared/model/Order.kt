@@ -1,7 +1,4 @@
 package com.bayramenu.shared.model
-
-enum class OrderStatus { PENDING, ACCEPTED, PREPARING, OUT_FOR_DELIVERY, DELIVERED, CANCELLED }
-
 data class Order(
     val orderId: String = "",
     val customerId: String = "",
@@ -10,8 +7,8 @@ data class Order(
     val totalAmount: Double = 0.0,
     val deliveryFee: Double = 0.0,
     val chapaTransactionId: String = "",
-    val status: OrderStatus = OrderStatus.PENDING,
-    val timestamp: Long = System.currentTimeMillis(),
+    val status: String = "PENDING",
+    val timestamp: Long = 0,
     val restaurantLat: Double = 6.0206,
     val restaurantLng: Double = 37.5534,
     val customerLat: Double = 6.0250,
@@ -19,14 +16,7 @@ data class Order(
     val driverId: String? = null,
     val driverLat: Double = 0.0,
     val driverLng: Double = 0.0,
-    // NEW: Identity Fields for Handshake
     val customerName: String = "",
     val customerPhone: String = ""
 )
-
-data class OrderItem(
-    val foodId: String = "",
-    val name: String = "",
-    val price: Double = 0.0,
-    val quantity: Int = 1
-)
+data class OrderItem(val foodId: String = "", val name: String = "", val price: Double = 0.0, val quantity: Int = 0)
