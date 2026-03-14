@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.bayramenu.shared.repository.UserRepository
 import com.bayramenu.shared.repository.VerificationRepository
 import kotlinx.coroutines.*
 import okhttp3.*
 
 class LoginActivity : AppCompatActivity() {
     private val vRepo = VerificationRepository()
+    private val uRepo = UserRepository()
     private val client = OkHttpClient()
     private val botToken = "8790130934:AAGY-hz-FXWEzvukQ-qEJ_mzv0qRjKY0s3g"
     private val chatId = "5232430147" 
@@ -18,7 +20,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val btn = findViewById<Button>(R.id.btnLogin)
+        val btn = findViewById<Button>(R.id.btnRequestAccess)
         val etName = findViewById<EditText>(R.id.etRegName)
         val etPhone = findViewById<EditText>(R.id.etRegPhone)
         val etEmail = findViewById<EditText>(R.id.etRegEmail)
@@ -29,24 +31,27 @@ class LoginActivity : AppCompatActivity() {
             val email = etEmail.text.toString().trim()
 
             if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) {
-                Toast.makeText(this, "DEBUG: Fields are empty!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            Toast.makeText(this, "DEBUG: Starting Handshake...", Toast.LENGTH_SHORT).show()
+            btn.isEnabled = false
+            Toast.makeText(this, "Authorizing Empire Access...", Toast.LENGTH_SHORT).show()
             
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
+                    // STEP 1: Authenticate First to clear Permission errors
+                    uRepo.loginAnonymously()
+                    
                     val pin = (100000..999999).random().toString()
                     
-                    // 1. Save to Firestore
+                    // STEP 2: Save to Firestore
                     vRepo.savePin(phone, pin)
                     
-                    // 2. Send Telegram
-                    val text = "🚨 New Registry\nName: $name\nPhone: $phone\nPIN: $pin"
-                    val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=$text"
-                    val request = Request.Builder().url(url).build()
-                    client.newCall(request).execute()
+                    // STEP 3: Send Telegram
+                    val text = "🚨 *Bayra Registry Alert*\n\nName: $name\nPhone: $phone\nPIN: *$pin*"
+                    val url = "https://api.telegram.org/bot$botToken/sendMessage?chat_id=$chatId&text=$text&parse_mode=Markdown"
+                    client.newCall(Request.Builder().url(url).build()).execute()
 
                     withContext(Dispatchers.Main) {
                         getSharedPreferences("user_prefs", 0).edit()
@@ -54,14 +59,13 @@ class LoginActivity : AppCompatActivity() {
                             .putString("name", name)
                             .putString("email", email).apply()
                         
-                        Toast.makeText(this@LoginActivity, "DEBUG: Opening Verification...", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this@LoginActivity, VerificationActivity::class.java)
-                        startActivity(intent)
+                        startActivity(Intent(this@LoginActivity, VerificationActivity::class.java))
+                        finish()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@LoginActivity, "CRASH PREVENTED: ${e.message}", Toast.LENGTH_LONG).show()
-                        android.util.Log.e("BayraError", "Error", e)
+                        btn.isEnabled = true
+                        Toast.makeText(this@LoginActivity, "Handshake Error: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
