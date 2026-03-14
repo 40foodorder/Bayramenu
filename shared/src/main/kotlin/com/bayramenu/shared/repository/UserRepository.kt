@@ -1,19 +1,14 @@
 package com.bayramenu.shared.repository
-
 import com.bayramenu.shared.model.Driver
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
-import java.util.concurrent.TimeUnit
 
-class UserRepository(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-) {
+class UserRepository(private val auth: FirebaseAuth = FirebaseAuth.getInstance()) {
+    private val dbUrl = "https://bayraeats-default-rtdb.europe-west1.firebasedatabase.app"
+    private val db = FirebaseDatabase.getInstance(dbUrl)
+
     fun getCurrentUserId(): String? = auth.currentUser?.uid
-    fun getPhone(): String? = auth.currentUser?.phoneNumber
 
     suspend fun loginAnonymously(): String {
         val result = auth.signInAnonymously().await()
@@ -21,15 +16,15 @@ class UserRepository(
     }
 
     suspend fun saveDriverProfile(driver: Driver) {
-        firestore.collection("drivers").document(driver.uid).set(driver).await()
+        db.getReference("drivers").child(driver.uid).setValue(driver).await()
     }
 
     suspend fun updateDriverStatus(uid: String, online: Boolean) {
-        firestore.collection("drivers").document(uid).update("isOnline", online).await()
+        db.getReference("drivers").child(uid).child("isOnline").setValue(online).await()
     }
 
     suspend fun getDriverProfile(uid: String): Driver? {
-        return firestore.collection("drivers").document(uid).get().await().toObject(Driver::class.java)
+        return db.getReference("drivers").child(uid).get().await().getValue(Driver::class.java)
     }
 
     fun logout() = auth.signOut()

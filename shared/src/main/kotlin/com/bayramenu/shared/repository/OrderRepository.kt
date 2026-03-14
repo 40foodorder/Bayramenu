@@ -1,74 +1,79 @@
 package com.bayramenu.shared.repository
-
-import com.bayramenu.shared.model.Order
-import com.bayramenu.shared.model.OrderStatus
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import com.bayramenu.shared.model.*
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.tasks.await
 
-class OrderRepository(private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()) {
-    private val collection = firestore.collection("orders")
+class OrderRepository {
+    private val dbUrl = "https://bayraeats-default-rtdb.europe-west1.firebasedatabase.app"
+    private val db = FirebaseDatabase.getInstance(dbUrl).getReference("orders")
 
     suspend fun placeOrder(order: Order): String {
-        val doc = collection.document()
-        doc.set(order.copy(orderId = doc.id)).await()
-        return doc.id
+        val key = db.push().key ?: return ""
+        db.child(key).setValue(order.copy(orderId = key)).await()
+        return key
     }
 
     fun listenForOrders(restaurantId: String, onOrdersReceived: (List<Order>) -> Unit) {
-        collection.whereEqualTo("restaurantId", restaurantId)
-            .addSnapshotListener { snapshot, _ ->
-                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
-                onOrdersReceived(orders)
+        db.orderByChild("restaurantId").equalTo(restaurantId).addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(s: com.google.firebase.database.DataSnapshot) {
+                onOrdersReceived(s.children.mapNotNull { it.getValue(Order::class.java) })
             }
+            override fun onCancelled(e: com.google.firebase.database.DatabaseError) {}
+        })
     }
 
     fun listenForAvailableDeliveries(onOrdersReceived: (List<Order>) -> Unit) {
-        collection.whereEqualTo("status", OrderStatus.ACCEPTED.name)
-            .addSnapshotListener { snapshot, _ ->
-                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
-                onOrdersReceived(orders)
+        db.orderByChild("status").equalTo(OrderStatus.ACCEPTED.name).addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(s: com.google.firebase.database.DataSnapshot) {
+                onOrdersReceived(s.children.mapNotNull { it.getValue(Order::class.java) })
             }
-    }
-
-    fun getMyOrders(customerId: String): Flow<List<Order>> = callbackFlow {
-        val sub = collection.whereEqualTo("customerId", customerId)
-            .addSnapshotListener { snapshot, _ ->
-                val orders = snapshot?.documents?.mapNotNull { it.toObject(Order::class.java) } ?: emptyList()
-                trySend(orders)
-            }
-        awaitClose { sub.remove() }
+            override fun onCancelled(e: com.google.firebase.database.DatabaseError) {}
+        })
     }
 
     fun observeOrder(orderId: String): Flow<Order?> = callbackFlow {
-        val sub = collection.document(orderId).addSnapshotListener { snapshot, _ ->
-            trySend(snapshot?.toObject(Order::class.java))
-        }
-        awaitClose { sub.remove() }
+        val listener = db.child(orderId).addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(s: com.google.firebase.database.DataSnapshot) { trySend(s.getValue(Order::class.java)) }
+            override fun onCancelled(e: com.google.firebase.database.DatabaseError) {}
+        })
+        awaitClose { db.child(orderId).removeEventListener(listener) }
     }
 
-    suspend fun updateOrderStatus(orderId: String, newStatus: OrderStatus) {
-        collection.document(orderId).update("status", newStatus.name).await()
+    suspend fun updateOrderStatus(orderId: String, status: OrderStatus) {
+        db.child(orderId).child("status").setValue(status.name).await()
     }
 
     suspend fun claimOrder(orderId: String, driverId: String) {
-        collection.document(orderId).update("driverId", driverId, "status", OrderStatus.OUT_FOR_DELIVERY.name).await()
+        val updates = mapOf("driverId" to driverId, "status" to OrderStatus.OUT_FOR_DELIVERY.name)
+        db.child(orderId).updateChildren(updates).await()
     }
 
     suspend fun updateDriverLocation(orderId: String, lat: Double, lng: Double) {
-        collection.document(orderId).update("driverLat", lat, "driverLng", lng).await()
+        db.child(orderId).child("driverLat").setValue(lat)
+        db.child(orderId).child("driverLng").setValue(lng).await()
     }
 
     fun getDriverEarningsStream(driverId: String): Flow<Double> = callbackFlow {
-        val sub = collection.whereEqualTo("driverId", driverId)
-            .whereEqualTo("status", OrderStatus.DELIVERED.name)
-            .addSnapshotListener { snapshot, _ ->
-                val total = snapshot?.documents?.sumOf { it.getDouble("deliveryFee") ?: 0.0 } ?: 0.0
+        val listener = db.orderByChild("driverId").equalTo(driverId).addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(s: com.google.firebase.database.DataSnapshot) {
+                val total = s.children.filter { it.child("status").value == OrderStatus.DELIVERED.name }
+                             .sumOf { it.child("deliveryFee").getValue(Double::class.java) ?: 0.0 }
                 trySend(total)
             }
-        awaitClose { sub.remove() }
+            override fun onCancelled(e: com.google.firebase.database.DatabaseError) {}
+        })
+        awaitClose { db.removeEventListener(listener) }
+    }
+    
+    fun getMyOrders(customerId: String): Flow<List<Order>> = callbackFlow {
+        val listener = db.orderByChild("customerId").equalTo(customerId).addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+            override fun onDataChange(s: com.google.firebase.database.DataSnapshot) {
+                trySend(s.children.mapNotNull { it.getValue(Order::class.java) }.reversed())
+            }
+            override fun onCancelled(e: com.google.firebase.database.DatabaseError) {}
+        })
+        awaitClose { db.removeEventListener(listener) }
     }
 }
