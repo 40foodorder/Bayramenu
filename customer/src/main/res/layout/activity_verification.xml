@@ -1,9 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="vertical" android:gravity="center" android:padding="24dp">
-    <TextView android:id="@+id/tvTimer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="10:00" android:textSize="48sp" android:textColor="#F44336"/>
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Enter 6-Digit PIN Sent to Director" android:layout_marginTop="16dp" android:gravity="center"/>
-    <EditText android:id="@+id/etPinInput" android:layout_width="200dp" android:layout_height="wrap_content" android:hint="000000" android:textSize="32sp" android:gravity="center" android:inputType="number" android:maxLength="6"/>
-    <Button android:id="@+id/btnValidate" android:layout_width="match_parent" android:layout_height="60dp" android:text="VALIDATE ACCESS" android:layout_marginTop="24dp" android:backgroundTint="#2196F3"/>
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:id="@+id/tvTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="10:00"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:textColor="#F44336"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter the 6-digit PIN sent to the Director"
+        android:gravity="center"
+        android:textColor="#757575"
+        android:textSize="16sp"/>
+
+    <EditText
+        android:id="@+id/etPinInput"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:hint="000000"
+        android:textSize="32sp"
+        android:gravity="center"
+        android:inputType="number"
+        android:maxLength="6"
+        android:letterSpacing="0.2"/>
+
+    <Button
+        android:id="@+id/btnValidate"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="VALIDATE ACCESS"
+        android:layout_marginTop="32dp"
+        android:backgroundTint="#2196F3"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"/>
+
 </LinearLayout>
