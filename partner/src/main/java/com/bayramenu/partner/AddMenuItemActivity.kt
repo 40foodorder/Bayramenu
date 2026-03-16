@@ -17,6 +17,7 @@ class AddMenuItemActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_menu)
 
+        val restId = intent.getStringExtra("REST_ID") ?: ""
         val etName = findViewById<EditText>(R.id.etFoodName)
         val etPrice = findViewById<EditText>(R.id.etFoodPrice)
         val etDesc = findViewById<EditText>(R.id.etFoodDesc)
@@ -27,16 +28,15 @@ class AddMenuItemActivity : AppCompatActivity() {
             val price = etPrice.text.toString().toDoubleOrNull() ?: 0.0
             val desc = etDesc.text.toString()
 
-            if (name.isEmpty() || price <= 0) {
-                Toast.makeText(this, "Valid Name and Price required", Toast.LENGTH_SHORT).show()
+            if (name.isEmpty() || price <= 0 || restId.isEmpty()) {
+                Toast.makeText(this, "Validation Failed", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             lifecycleScope.launch {
                 try {
-                    // MVP: Hardcoded to your test restaurant ID
-                    menuRepository.addMenuItem("RESTAURANT_ID_123", MenuItem(name = name, price = price, description = desc))
-                    Toast.makeText(this@AddMenuItemActivity, "Food Added Successfully!", Toast.LENGTH_SHORT).show()
+                    menuRepository.addMenuItem(restId, MenuItem(name = name, price = price, description = desc))
+                    Toast.makeText(this@AddMenuItemActivity, "Food Added!", Toast.LENGTH_SHORT).show()
                     finish()
                 } catch (e: Exception) {
                     Toast.makeText(this@AddMenuItemActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()

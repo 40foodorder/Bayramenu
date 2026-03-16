@@ -10,13 +10,14 @@ class MenuRepository {
     suspend fun getMenu(restaurantId: String): List<MenuItem> {
         return try {
             val snapshot = db.child(restaurantId).child("menu").get().await()
-            val items = snapshot.children.mapNotNull { 
+            snapshot.children.mapNotNull { 
                 it.getValue(MenuItem::class.java)?.copy(id = it.key ?: "") 
             }
-            items
-        } catch (e: Exception) {
-            android.util.Log.e("BayraMenu", "Fetch Error", e)
-            emptyList()
-        }
+        } catch (e: Exception) { emptyList() }
+    }
+
+    // RESTORED: This allows the Partner to save food items
+    suspend fun addMenuItem(restaurantId: String, item: MenuItem) {
+        db.child(restaurantId).child("menu").push().setValue(item).await()
     }
 }
