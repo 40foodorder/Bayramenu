@@ -17,7 +17,6 @@ class CheckoutActivity : AppCompatActivity() {
     private val orderRepo = OrderRepository()
     private val userRepo = UserRepository()
     
-    // TACTICAL FIX: 60-second timeout for slow Render wake-up
     private val client = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
@@ -47,7 +46,7 @@ class CheckoutActivity : AppCompatActivity() {
                 val json = JSONObject().apply {
                     put("amount", amount); put("email", email)
                     put("firstName", name); put("lastName", "Customer")
-                    put("tx_ref", "TX-\${System.currentTimeMillis()}")
+                    put("tx_ref", "TX-${System.currentTimeMillis()}")
                 }
 
                 val request = Request.Builder()
@@ -56,9 +55,8 @@ class CheckoutActivity : AppCompatActivity() {
                     .build()
 
                 client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) throw Exception("Server Error: ${response.code}")
                     val body = response.body?.string()
-                    if (!response.isSuccessful) throw Exception("Server Error: \${response.code}")
-                    
                     val checkoutUrl = JSONObject(body!!).getJSONObject("data").getString("checkout_url")
                     withContext(Dispatchers.Main) {
                         val intent = Intent(this@CheckoutActivity, PaymentActivity::class.java)
@@ -68,7 +66,7 @@ class CheckoutActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CheckoutActivity, "Error: \${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@CheckoutActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                     findViewById<Button>(R.id.btnPay).isEnabled = true
                     findViewById<Button>(R.id.btnPay).text = "RETRY"
                 }
@@ -85,9 +83,12 @@ class CheckoutActivity : AppCompatActivity() {
         val restId = intent.getStringExtra("RESTAURANT_ID") ?: ""
         val total = CartManager.cart.value.getTotal() + 35.0
         lifecycleScope.launch {
+            // FIXED: Using OrderStatus.PENDING instead of "PENDING" string
             orderRepo.placeOrder(Order(
                 customerId = userRepo.getCurrentUserId() ?: "guest",
-                restaurantId = restId, totalAmount = total, status = "PENDING"
+                restaurantId = restId, 
+                totalAmount = total, 
+                status = OrderStatus.PENDING
             ))
             CartManager.clearCart()
             finish()
