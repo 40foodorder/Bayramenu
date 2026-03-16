@@ -1,78 +1,65 @@
 package com.bayramenu.app
-
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.bayramenu.shared.model.Order
-import com.bayramenu.shared.model.OrderStatus
-import com.bayramenu.shared.repository.CartManager
-import com.bayramenu.shared.repository.OrderRepository
-import com.bayramenu.shared.repository.UserRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.bayramenu.shared.model.*
+import com.bayramenu.shared.repository.*
+import kotlinx.coroutines.*
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 class CheckoutActivity : AppCompatActivity() {
     private val orderRepo = OrderRepository()
     private val userRepo = UserRepository()
-    private val client = OkHttpClient()
-    private val RENDER_URL = "https://bayramenu.onrender.com"
+    
+    // TACTICAL FIX: 60-second timeout for slow Render wake-up
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_checkout)
         val restId = intent.getStringExtra("RESTAURANT_ID") ?: return finish()
-        
-        val tvDetails = findViewById<TextView>(R.id.tvOrderDetails)
         val btnPay = findViewById<Button>(R.id.btnPay)
-
         val total = CartManager.cart.value.getTotal() + 35.0
-        tvDetails.text = "Order Total: $total ETB"
 
         btnPay.setOnClickListener {
             btnPay.isEnabled = false
-            btnPay.text = "Initializing Payment..."
-            initializeChapaPayment(total, restId)
+            btnPay.text = "Waking up server..."
+            initializeChapa(total, restId)
         }
     }
 
-    private fun initializeChapaPayment(amount: Double, restId: String) {
-        val prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-        val name = prefs.getString("name", "Customer") ?: "Customer"
-        val email = "customer@bayramenu.com" // Placeholder for Chapa requirements
+    private fun initializeChapa(amount: Double, restId: String) {
+        val prefs = getSharedPreferences("user_prefs", 0)
+        val name = prefs.getString("name", "User") ?: "User"
+        val email = prefs.getString("email", "test@bayramenu.com") ?: "test@bayramenu.com"
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val json = JSONObject().apply {
-                    put("amount", amount)
-                    put("email", email)
-                    put("firstName", name)
-                    put("lastName", "User")
-                    put("tx_ref", "TX-${System.currentTimeMillis()}")
-                    put("orderId", "PENDING")
+                    put("amount", amount); put("email", email)
+                    put("firstName", name); put("lastName", "Customer")
+                    put("tx_ref", "TX-\${System.currentTimeMillis()}")
                 }
 
                 val request = Request.Builder()
-                    .url("$RENDER_URL/pay")
+                    .url("https://bayramenu.onrender.com/pay")
                     .post(json.toString().toRequestBody("application/json".toMediaType()))
                     .build()
 
                 client.newCall(request).execute().use { response ->
                     val body = response.body?.string()
-                    val chapaData = JSONObject(body ?: "")
-                    val checkoutUrl = chapaData.getJSONObject("data").getString("checkout_url")
-
+                    if (!response.isSuccessful) throw Exception("Server Error: \${response.code}")
+                    
+                    val checkoutUrl = JSONObject(body!!).getJSONObject("data").getString("checkout_url")
                     withContext(Dispatchers.Main) {
                         val intent = Intent(this@CheckoutActivity, PaymentActivity::class.java)
                         intent.putExtra("CHECKOUT_URL", checkoutUrl)
@@ -81,8 +68,9 @@ class CheckoutActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@CheckoutActivity, "Payment Init Error", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@CheckoutActivity, "Error: \${e.message}", Toast.LENGTH_LONG).show()
                     findViewById<Button>(R.id.btnPay).isEnabled = true
+                    findViewById<Button>(R.id.btnPay).text = "RETRY"
                 }
             }
         }
@@ -90,24 +78,18 @@ class CheckoutActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 99 && resultCode == RESULT_OK) {
-            finalizeOrder()
-        }
+        if (requestCode == 99 && resultCode == RESULT_OK) finalizeOrder()
     }
 
     private fun finalizeOrder() {
         val restId = intent.getStringExtra("RESTAURANT_ID") ?: ""
         val total = CartManager.cart.value.getTotal() + 35.0
-        val order = Order(
-            customerId = userRepo.getCurrentUserId() ?: "guest",
-            restaurantId = restId,
-            totalAmount = total,
-            status = OrderStatus.PENDING
-        )
         lifecycleScope.launch {
-            val orderId = orderRepo.placeOrder(order)
+            orderRepo.placeOrder(Order(
+                customerId = userRepo.getCurrentUserId() ?: "guest",
+                restaurantId = restId, totalAmount = total, status = "PENDING"
+            ))
             CartManager.clearCart()
-            startActivity(Intent(this@CheckoutActivity, TrackingActivity::class.java).putExtra("ORDER_ID", orderId))
             finish()
         }
     }
